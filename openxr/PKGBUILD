@@ -1,0 +1,71 @@
+# Maintainer: cevdetta
+# Contributor: cevdetta
+
+_pkgname=openxr
+pkgname=${_pkgname}-waypure
+pkgver=1.1.60
+pkgrel=1
+pkgdesc="An open standard for virtual reality and augmented reality platforms and devices"
+arch=('x86_64')
+url="https://github.com/KhronosGroup/OpenXR-SDK-Source"
+license=('Apache-2.0')
+depends=(
+  'glibc'
+  'jsoncpp'
+  'libgcc'
+  'libstdc++'
+  'vulkan-icd-loader'
+)
+makedepends=(
+  'cmake'
+  'mesa'
+  'ninja'
+  'python'
+  'vulkan-headers'
+  'wayland'
+  'wayland-protocols'
+)
+provides=("${_pkgname}")
+conflicts=("${_pkgname}")
+replaces=("${_pkgname}")
+source=("${url}/releases/download/release-${pkgver}/OpenXR-SDK-Source-release-${pkgver}.tar.gz")
+sha256sums=('89105178608351340325177b9d54922cf38db2c0bbf5e13e9b0dc88e9e49f397')
+
+build() {
+  local _cmake_options=(
+    -B build -G Ninja
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D CMAKE_INSTALL_LIBDIR=lib
+
+    -D BUILD_LOADER=ON
+    -D BUILD_ALL_EXTENSIONS=OFF
+    -D BUILD_LOADER_WITH_EXCEPTION_HANDLING=ON
+    -D OPENXR_DEBUG_POSTFIX=""
+
+    -D DYNAMIC_LOADER=ON
+    -D PRESENTATION_BACKEND=wayland
+
+    -D BUILD_API_LAYERS=ON
+    -D BUILD_TESTS=OFF
+    -D BUILD_TESTING=OFF
+    -D BUILD_CONFORMANCE_TESTS=OFF
+    -D BUILD_SDK_TESTS=OFF
+    -D BUILD_SPECIFICATION=OFF
+    -D BUILD_FORCE_GENERATION=OFF
+
+    -D BUILD_WITH_SYSTEM_JSONCPP=ON
+    -D BUILD_WITH_STD_FILESYSTEM=ON
+
+    -D BUILD_WITH_XLIB_HEADERS=OFF
+    -D BUILD_WITH_XCB_HEADERS=OFF
+    -D BUILD_WITH_WAYLAND_HEADERS=ON
+  )
+  cmake -S "OpenXR-SDK-Source-release-${pkgver}" "${_cmake_options[@]}"
+  cmake --build build
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+  # install -Dm644 "OpenXR-SDK-Source-release-${pkgver}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

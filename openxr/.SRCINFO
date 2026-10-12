@@ -1,0 +1,26 @@
+pkgbase = openxr-waypure
+	pkgdesc = An open standard for virtual reality and augmented reality platforms and devices
+	pkgver = 1.1.60
+	pkgrel = 1
+	url = https://github.com/KhronosGroup/OpenXR-SDK-Source
+	arch = x86_64
+	license = Apache-2.0
+	makedepends = cmake
+	makedepends = mesa
+	makedepends = ninja
+	makedepends = python
+	makedepends = vulkan-headers
+	makedepends = wayland
+	makedepends = wayland-protocols
+	depends = glibc
+	depends = jsoncpp
+	depends = libgcc
+	depends = libstdc++
+	depends = vulkan-icd-loader
+	provides = openxr
+	conflicts = openxr
+	replaces = openxr
+	source = https://github.com/KhronosGroup/OpenXR-SDK-Source/releases/download/release-1.1.60/OpenXR-SDK-Source-release-1.1.60.tar.gz
+	sha256sums = 89105178608351340325177b9d54922cf38db2c0bbf5e13e9b0dc88e9e49f397
+
+pkgname = openxr-waypure
