@@ -1,0 +1,150 @@
+# Maintainer: cevdetta
+# Contributor: cevdetta
+
+_pkgbase=libfm
+pkgbase=${_pkgbase}-waypure
+pkgname=(
+  "${_pkgbase}-waypure"
+  "${_pkgbase}-extra-waypure"
+  "${_pkgbase}-gtk3-waypure"
+)
+pkgver=1.4.1
+pkgrel=1
+pkgdesc="Library for file management"
+arch=('x86_64')
+url="https://github.com/lxde/libfm"
+license=('LGPL-2.1-or-later OR GPL-2.0-or-later')
+depends=(
+  at-spi2-core
+  cairo
+  gdk-pixbuf2
+  glib2
+  glibc
+  gtk3
+  libexif
+  menu-cache
+  pango
+)
+makedepends=(
+  glib2-devel
+  gtk-doc
+  intltool
+  vala
+)
+source=("${_pkgbase}-${pkgver}.tar.gz::${url}/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('1dff59162eb1ca5d1a6b945de4d0bdf2256a5264f54c9225b8599adce45dcb05')
+
+prepare() {
+  cd "${_pkgbase}-${pkgver}"
+  autoreconf -fiv
+}
+
+
+build() {
+  local _make_options=(
+    --prefix=/usr
+    --sysconfdir=/etc
+    --localstatedir=/var
+    --with-gtk=3
+
+    --enable-gtk-doc
+    --with-gnu-ld
+
+    # --enable_debug=no
+  )
+
+  cd "${_pkgbase}-${pkgver}"
+
+  ./configure "${_make_options[@]}"
+
+  make
+}
+
+
+package_libfm-waypure() {
+  pkgdesc="Library for file management"
+  depends=(
+    glib2
+    glibc
+    libexif
+    "libfm-extra-waypure=${pkgver}-${pkgrel}"
+    menu-cache
+  )
+  provides=("${_pkgbase}=${pkgver}")
+  conflicts=("${_pkgbase}")
+  replaces=("${_pkgbase}")
+
+  cd "${_pkgbase}-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+
+  # Fix for FS#32361
+  rm -rf "${pkgdir}/usr/include/libfm"
+  mv "${pkgdir}/usr/include/libfm-1.0/" "${pkgdir}/usr/include/libfm"
+
+  # Split libfm-extra
+  [[ -d "${srcdir}/libfm-extra" ]] && rm -r "${srcdir}/libfm-extra/"
+  mkdir "${srcdir}/libfm-extra"
+  mv "${pkgdir}/usr/include/libfm/fm-"{extra,version,xml-file}.h \
+    "${pkgdir}/usr/lib/libfm-extra."* \
+    "${pkgdir}/usr/lib/pkgconfig/libfm-extra.pc" \
+    "${srcdir}/libfm-extra/"
+
+  # Split libfm-gtk3
+  [[ -d "${srcdir}/libfm-gtk3" ]] && rm -r "${srcdir}/libfm-gtk3/"
+  mkdir "${srcdir}/libfm-gtk3"
+  mv "${pkgdir}/usr/bin" \
+    "${pkgdir}/usr/lib/libfm-gtk3."* \
+    "${pkgdir}/usr/lib/libfm/modules/gtk-"* \
+    "${pkgdir}/usr/lib/pkgconfig/libfm-gtk3.pc" \
+    "${pkgdir}/usr/share/applications" \
+    "${pkgdir}/usr/share/man" \
+    "${srcdir}/libfm-gtk3/"
+}
+
+package_libfm-extra-waypure() {
+  pkgdesc="Extra library for file management"
+  depends=(
+    glib2
+    glibc
+  )
+  provides=("${_pkgbase}-extra=${pkgver}")
+  conflicts=("${_pkgbase}-extra")
+  replaces=("${_pkgbase}-extra")
+
+  cd "${srcdir}/libfm-extra"
+  mkdir -p "${pkgdir}/usr/include/libfm" "${pkgdir}/usr/lib/pkgconfig"
+  mv fm-*.h "${pkgdir}/usr/include/libfm"
+  mv libfm-extra.so* "${pkgdir}/usr/lib"
+  mv libfm-extra.pc "${pkgdir}/usr/lib/pkgconfig"
+}
+
+package_libfm-gtk3-waypure() {
+  pkgdesc="GTK library for file management"
+  depends=(
+    at-spi2-core
+    cairo
+    gdk-pixbuf2
+    glib2
+    glibc
+    gtk3
+    "libfm-waypure=${pkgver}-${pkgrel}"
+    menu-cache
+    pango
+  )
+  provides=("${_pkgbase}-gtk3=${pkgver}")
+  conflicts=(
+    "${_pkgbase}-gtk3"
+    libfm-gtk2
+    lxshortcut
+  )
+  replaces=("${_pkgbase}-gtk3")
+
+  cd "${srcdir}/libfm-gtk3"
+  mkdir -p "${pkgdir}/usr/lib/libfm/modules" "${pkgdir}/usr/lib/pkgconfig" "${pkgdir}/usr/share"
+  mv bin "${pkgdir}/usr"
+  mv libfm-gtk3.so* "${pkgdir}/usr/lib"
+  mv gtk-* "${pkgdir}/usr/lib/libfm/modules"
+  mv libfm-gtk3.pc "${pkgdir}/usr/lib/pkgconfig"
+  mv applications "${pkgdir}/usr/share"
+  mv man "${pkgdir}/usr/share"
+}

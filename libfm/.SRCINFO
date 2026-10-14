@@ -1,0 +1,58 @@
+pkgbase = libfm-waypure
+	pkgdesc = Library for file management
+	pkgver = 1.4.1
+	pkgrel = 1
+	url = https://github.com/lxde/libfm
+	arch = x86_64
+	license = LGPL-2.1-or-later OR GPL-2.0-or-later
+	makedepends = glib2-devel
+	makedepends = gtk-doc
+	makedepends = intltool
+	makedepends = vala
+	depends = at-spi2-core
+	depends = cairo
+	depends = gdk-pixbuf2
+	depends = glib2
+	depends = glibc
+	depends = gtk3
+	depends = libexif
+	depends = menu-cache
+	depends = pango
+	source = libfm-1.4.1.tar.gz::https://github.com/lxde/libfm/archive/refs/tags/1.4.1.tar.gz
+	sha256sums = 1dff59162eb1ca5d1a6b945de4d0bdf2256a5264f54c9225b8599adce45dcb05
+
+pkgname = libfm-waypure
+	pkgdesc = Library for file management
+	depends = glib2
+	depends = glibc
+	depends = libexif
+	depends = libfm-extra-waypure=1.4.1-1
+	depends = menu-cache
+	provides = libfm=1.4.1
+	conflicts = libfm
+	replaces = libfm
+
+pkgname = libfm-extra-waypure
+	pkgdesc = Extra library for file management
+	depends = glib2
+	depends = glibc
+	provides = libfm-extra=1.4.1
+	conflicts = libfm-extra
+	replaces = libfm-extra
+
+pkgname = libfm-gtk3-waypure
+	pkgdesc = GTK library for file management
+	depends = at-spi2-core
+	depends = cairo
+	depends = gdk-pixbuf2
+	depends = glib2
+	depends = glibc
+	depends = gtk3
+	depends = libfm-waypure=1.4.1-1
+	depends = menu-cache
+	depends = pango
+	provides = libfm-gtk3=1.4.1
+	conflicts = libfm-gtk3
+	conflicts = libfm-gtk2
+	conflicts = lxshortcut
+	replaces = libfm-gtk3
