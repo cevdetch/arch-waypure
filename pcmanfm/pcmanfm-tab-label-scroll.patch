@@ -1,0 +1,22 @@
+From 4617737634d867e153cf22a480bfcf40db3e8d14 Mon Sep 17 00:00:00 2001
+From: elig0n <31196036+elig0n@users.noreply.github.com>
+Date: Mon, 16 Feb 2026 00:32:02 +0200
+Subject: [PATCH] Update tab-page.c
+
+Allow mouse scrolling on tab labels
+---
+ src/tab-page.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/tab-page.c b/src/tab-page.c
+index 5c98dc6..2048064 100644
+--- a/src/tab-page.c
++++ b/src/tab-page.c
+@@ -964,6 +964,7 @@ static void fm_tab_page_init(FmTabPage *page)
+ 
+     /* create tab label */
+     tab_label = (FmTabLabel*)fm_tab_label_new("");
++  	gtk_widget_add_events(GTK_WIDGET(tab_label), GDK_SCROLL_MASK);
+     gtk_label_set_max_width_chars(tab_label->label, app_config->max_tab_chars);
+ #if ! GTK_CHECK_VERSION(3, 0, 0)
+     gtk_label_set_ellipsize(tab_label->label, PANGO_ELLIPSIZE_END);

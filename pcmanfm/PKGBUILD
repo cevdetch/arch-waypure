@@ -1,0 +1,100 @@
+# Maintainer: cevdetta
+# Contributor: cevdetta
+
+_pkgname=pcmanfm
+pkgname=${_pkgname}-waypure
+pkgver=1.4.0
+pkgrel=2
+pkgdesc="Extremely fast and lightweight file manager"
+arch=('x86_64')
+url="https://github.com/lxde/pcmanfm"
+license=('GPL-2.0-or-later')
+groups=('lxde')
+depends=(
+  at-spi2-core
+  cairo
+  gdk-pixbuf2
+  glib2
+  glibc
+  gtk3
+  libfm
+  libfm-gtk3
+  lxmenu-data
+  pango
+)
+makedepends=('autoconf' 'automake' 'make' 'intltool')
+optdepends=(
+  'gvfs: Trash support, mounting with udisks and remote filesystems'
+  'xarchiver: Archive management'
+)
+provides=("${_pkgname}")
+conflicts=("${_pkgname}" 'pcmanfm-gtk3')
+replaces=("${_pkgname}" 'pcmanfm-gtk3')
+source=(
+  "${_pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/${pkgver}.tar.gz"
+  'pcmanfm.appdata.xml'
+  'pcmanfm-transient-dialog.patch::https://github.com/lxde/pcmanfm/pull/32.patch'
+  'pcmanfm-desktop-onlyshowin.patch::https://github.com/lxde/pcmanfm/pull/34.patch'
+  'pcmanfm-gtk3-fixed-tab-width.patch::https://github.com/lxde/pcmanfm/pull/38.patch'
+  'pcmanfm-tab-label-scroll.patch::https://github.com/lxde/pcmanfm/pull/49.patch'
+  'pcmanfm-copy-path-plaintext.patch::https://github.com/lxde/pcmanfm/pull/46.patch'
+  'pcmanfm-wayland.patch'
+)
+sha256sums=('cda4f5ad7e049dcdf3b051b9de4c779adcd55bd720e9c96c45275389aa84264e'
+            '65b4b7aac29899a16f6392f1cff740894a9e90f12d737ab2ad216190bdc64ca4'
+            'f971a4bc11d3f7341a5a843385fa161c80483e68c5a6876a986541c76d5b67f1'
+            '04e6831cbcfd0131cfbf0d18ad223451e4c1329a0ea6de9a74de514673315d50'
+            '58d995474de7d7928e3a503a9fca4ab2119ed2743facabb76c891fe628d09034'
+            'f89d4320ff395d73ce1b4d8ff833140d26d60f10629aa694a6a794769b7e61ed'
+            '2fae153c13825b5a08c071ffc85f842516ac28c493d064aa3b879ebaaba867c1'
+            '8724d87e79ec3d694a7ecdfe80fbb9e38ec6562766193f44c9c00559c7a3726f')
+
+
+prepare() {
+  cd "${_pkgname}-${pkgver}"
+
+  # https://github.com/lxde/pcmanfm/pull/32
+  git apply -3 ../pcmanfm-transient-dialog.patch
+
+  # https://github.com/lxde/pcmanfm/pull/34
+  git apply -3 ../pcmanfm-desktop-onlyshowin.patch
+
+  # https://github.com/lxde/pcmanfm/pull/38
+  git apply -3 ../pcmanfm-gtk3-fixed-tab-width.patch
+
+  # https://github.com/lxde/pcmanfm/pull/49
+  git apply -3 ../pcmanfm-tab-label-scroll.patch
+
+  # https://github.com/lxde/pcmanfm/pull/46
+  git apply -3 ../pcmanfm-copy-path-plaintext.patch
+
+  # Wayland-only: guard X11/Xlib code with GDK_WINDOWING_X11, render
+  # wallpaper to an image surface, drop the hard x11 configure check
+  # (plain apply: no git index lines in this patch, so no -3)
+  git apply ../pcmanfm-wayland.patch
+
+  autoreconf -fiv
+}
+
+build() {
+  local _make_options=(
+    --prefix=/usr
+    --sysconfdir=/etc
+    --localstatedir=/var
+    --with-gtk=3
+
+    # --enable_debug=no
+  )
+
+  cd "${_pkgname}-${pkgver}"
+
+  ./configure "${_make_options[@]}"
+
+  make
+}
+
+package() {
+  cd "${_pkgname}-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 "../${_pkgname}.appdata.xml" -t "${pkgdir}/usr/share/metainfo/${_pkgname}.appdata.xml"
+}
