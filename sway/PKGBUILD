@@ -1,5 +1,5 @@
-# Maintainer: cevdetta
-# Contributor: cevdetta
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: cevdetch
 
 _pkgname=sway
 pkgname=${_pkgname}-waypure
