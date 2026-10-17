@@ -1,0 +1,63 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: cevdetch
+
+_pkgname=xdg-desktop-portal-gtk
+pkgname=${_pkgname}-waypure
+pkgver=1.15.3
+pkgrel=1
+pkgdesc="A backend implementation for xdg-desktop-portal using GTK"
+arch=('x86_64')
+url="https://github.com/flatpak/xdg-desktop-portal-gtk"
+license=('LGPL-2.0-or-later')
+depends=(
+  fontconfig
+  gdk-pixbuf2
+  glib2
+  glibc
+  gsettings-desktop-schemas
+  gtk3
+  libgcc
+  xdg-desktop-portal
+)
+makedepends=(
+  glib2-devel
+  meson
+  python
+  python-packaging
+)
+optdepends=("evince: Print preview")
+provides=("${_pkgname}" 'xdg-desktop-portal-impl')
+conflicts=("${_pkgname}")
+replaces=("${_pkgname}")
+source=("${url}/releases/download/${pkgver}/${_pkgname}-${pkgver}.tar.xz")
+sha256sums=('47a3743d2419a8601e691db37e85bb5fac5ae4b26842177065cd5f22ada23b37')
+
+build() {
+  local _meson_options=(
+    # -D dbus-service-dir='' # default: PREFIX/share/dbus-1/services
+    # -D systemd-user-unit-dir='' # default: PREFIX/lib/systemd/user
+    # -D datarootdir='' # ''
+
+    -D wallpaper=disabled # ARCH
+    -D settings=auto
+    -D appchooser=auto
+    -D lockdown=auto
+  )
+
+  arch-meson "${_pkgname}-${pkgver}" build "${_meson_options[@]}"
+
+  meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  DESTDIR="${pkgdir}" meson install -C build
+
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/xdg-desktop-portal/gtk-portals.conf" <<END
+[preferred]
+default=gtk
+END
+}
