@@ -1,0 +1,202 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: cevdetch
+
+_pkgname=zed
+pkgname=${_pkgname}-waypure
+pkgver=1.24.3
+pkgrel=1
+pkgdesc="A Wayland-native code editor without calls or live collaboration"
+arch=('x86_64')
+url="https://github.com/zed-industries/zed"
+license=(GPL-3.0-or-later AGPL-3.0-or-later Apache-2.0)
+depends=(
+  alsa-lib
+  fontconfig # font-kit loads libfontconfig at runtime
+  git # Git subprocesses
+  glib2 # gio fallback for opening URLs and files
+  glibc
+  hicolor-icon-theme
+  libgcc
+  libxkbcommon
+  'nodejs>=18' # language-server runtime
+  npm # language-server installation
+  sqlite
+  vulkan-driver # GPU rendering
+  vulkan-icd-loader # ash loads libvulkan at runtime
+  vulkan-tools # vulkaninfo diagnostics
+  wayland # libwayland-client is loaded at runtime
+  zstd
+)
+makedepends=(
+  cargo
+  cargo-about
+  clang
+  cmake
+  protobuf
+  vulkan-headers
+  vulkan-validation-layers
+)
+checkdepends=(python)
+optdepends=('org.freedesktop.secrets: to keep you logged into your Zed account')
+provides=("${_pkgname}=${pkgver}")
+conflicts=("${_pkgname}")
+replaces=("${_pkgname}" 'zed-editor')
+options=(!debug)
+source=(
+  "${url}/archive/v${pkgver}/${_pkgname}-${pkgver}.tar.gz"
+  wayland-local-only.patch
+)
+sha256sums=(
+  '69e06d42fe32af31fc549001e3ccb6397610deacf6ccc3482a2bdb0a629bc269'
+  'e125a03f473d7dca0dd2d7427cfa54d4378db9ee2ddfc957e7a7817da269016b'
+)
+
+_binname=zeditor
+_appid=dev.zed.Zed
+
+_srcenv() {
+	cd "${srcdir}/${_pkgname}-${pkgver}"
+	export CARGO_HOME="${srcdir}"
+	export CARGO_PROFILE_RELEASE_DEBUG=0
+	export CARGO_PROFILE_RELEASE_STRIP=false
+	export CARGO_PROFILE_RELEASE_LTO=thin
+	export CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1
+	export CARGO_PROFILE_RELEASE_OPT_LEVEL=3
+	export GIT_CEILING_DIRECTORIES="${srcdir}"
+	if [[ -n ${NPROC:-} ]]; then
+		export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-${NPROC}}"
+	fi
+	# makepkg preserves the environment between prepare(), build() and check().
+	if [[ -z ${_zed_build_flags_set:-} ]]; then
+		CFLAGS+=" -ffat-lto-objects -ffile-prefix-map=${srcdir}=/usr/src/debug/${pkgname}"
+		CXXFLAGS+=" -ffat-lto-objects -ffile-prefix-map=${srcdir}=/usr/src/debug/${pkgname}"
+		RUSTFLAGS+=" --cfg tokio_unstable -C symbol-mangling-version=v0 --remap-path-prefix=${srcdir}=/usr/src/debug/${pkgname}"
+		export RUSTFLAGS
+		# The source tarball carries the release commit; the packaging repo does not.
+		ZED_COMMIT_SHA=$(gzip -dc "${srcdir}/${_pkgname}-${pkgver}.tar.gz" | {
+			git get-tar-commit-id
+			cat > /dev/null
+		})
+		if [[ ! ${ZED_COMMIT_SHA} =~ ^[0-9a-f]{40}$ ]]; then
+			printf '%s\n' 'Could not read the release commit from the source archive' >&2
+			return 1
+		fi
+		export ZED_COMMIT_SHA
+		_zed_build_flags_set=1
+	fi
+	export LIBSQLITE3_SYS_USE_PKG_CONFIG=1
+	export ZSTD_SYS_USE_PKG_CONFIG=1
+}
+
+prepare() {
+	_srcenv
+	patch -Np1 -i "${srcdir}/wayland-local-only.patch"
+	cargo fetch --locked --target host-tuple
+	export DO_STARTUP_NOTIFY="true"
+	export APP_ICON="zed"
+	export APP_NAME="Zed"
+	export APP_CLI="${_binname}"
+	export APP_ID="${_appid}"
+	export APP_ARGS="%U"
+	export BRANDING_LIGHT="#99c1f1"
+	export BRANDING_DARK="#1a5fb4"
+	envsubst < "crates/zed/resources/zed.desktop.in" > "${_appid}".desktop
+	envsubst < "crates/zed/resources/flatpak/zed.metainfo.xml.in" > "${_appid}".metainfo.xml
+	sed -i '/@release_info@/d' "${_appid}".metainfo.xml
+	./script/generate-licenses
+	local _rust_target
+	_rust_target=$(rustc -vV | sed -n 's/^host: //p')
+	cargo about generate --frozen --target "${_rust_target}" \
+		--manifest-path crates/cli/Cargo.toml --no-default-features --features cli \
+		--fail -c script/licenses/zed-licenses.toml \
+		script/licenses/template.md.hbs > cli-licenses.md
+}
+
+build() {
+	_srcenv
+
+	local _cargo_options=(
+		--release
+		--frozen
+		--package zed
+		--no-default-features
+		--features gpui_platform/wayland
+	)
+	local _cli_cargo_options=(
+		--release
+		--frozen
+		--package cli
+		--no-default-features
+		--features cli/cli
+	)
+	export ZED_UPDATE_EXPLANATION='Updates are handled by pacman'
+	export RELEASE_VERSION="$pkgver"
+	export PROTOC=/usr/bin/protoc
+	export PROTOC_INCLUDE=/usr/include
+	cargo build "${_cargo_options[@]}"
+	cargo build "${_cli_cargo_options[@]}"
+	target/release/cli --completions bash > completions.bash
+	target/release/cli --completions fish > completions.fish
+	target/release/cli --completions zsh > completions.zsh
+}
+
+check() {
+	_srcenv
+	local _linked_libraries _dynamic_sections _cli_version
+	_linked_libraries=$(ldd target/release/zed target/release/cli)
+	if grep -Eq 'not found|lib(X11|Xau|Xdmcp|Xext|Xrender|Xi|Xrandr|Xfixes|Xcursor|Xcomposite|Xdamage|Xt|xcb|xkbcommon-x11|GLX|ICE|SM)' <<< "${_linked_libraries}"; then
+		printf '%s\n' "${_linked_libraries}"
+		printf '%s\n' 'Missing library or unexpected X11 dependency in the editor or CLI' >&2
+		return 1
+	fi
+	_dynamic_sections=$(readelf -dW target/release/zed target/release/cli)
+	if grep -Eq '\((RPATH|RUNPATH)\)' <<< "${_dynamic_sections}"; then
+		printf '%s\n' 'Unexpected runtime search path in the editor or CLI' >&2
+		return 1
+	fi
+	target/release/zed --help > /dev/null
+	target/release/cli --help > /dev/null
+	_cli_version=$(target/release/cli --version)
+	if [[ ${_cli_version} != "Zed ${pkgver} ${ZED_COMMIT_SHA} "* ]]; then
+		printf '%s\n' "Unexpected editor version: ${_cli_version}" >&2
+		return 1
+	fi
+	python - <<'PY'
+import json
+from pathlib import Path
+import re
+import subprocess
+
+inventory = json.loads(subprocess.check_output([
+    "target/release/zed", "--dump-all-actions",
+], text=True))["actions"]
+registered = {action["name"] for action in inventory}
+registered.update(alias for action in inventory for alias in action["deprecated_aliases"])
+other_platforms = {"default-macos.json", "default-windows.json", "specific-overrides-macos.json"}
+for path in sorted(Path("assets/keymaps").rglob("*.json")):
+    if path.name in other_platforms:
+        continue
+    referenced = set(re.findall(r'"([A-Za-z_][\w]*::[\w]+)"', path.read_text()))
+    missing = referenced - registered
+    if missing:
+        raise SystemExit(f"{path}: unknown actions: {', '.join(sorted(missing))}")
+PY
+}
+
+package() {
+	depends+=(libasound.so
+	          libgcc_s.so
+	          libxkbcommon.so
+	          libsqlite3.so
+	          libzstd.so)
+	cd "${_pkgname}-${pkgver}"
+	install -Dm0755 target/release/cli "${pkgdir}/usr/bin/${_binname}"
+	install -Dm0755 target/release/zed "${pkgdir}/usr/lib/${_pkgname}/zed-editor"
+	install -Dm0644 -t "${pkgdir}/usr/share/applications/" "${_appid}.desktop"
+	install -Dm0644 -t "${pkgdir}/usr/share/metainfo/" "${_appid}.metainfo.xml"
+	install -Dm0644 crates/zed/resources/app-icon.png "${pkgdir}/usr/share/icons/hicolor/512x512/apps/${_pkgname}.png"
+	install -Dm0644 completions.bash "${pkgdir}/usr/share/bash-completion/completions/${_binname}"
+	install -Dm0644 completions.fish "${pkgdir}/usr/share/fish/vendor_completions.d/${_binname}.fish"
+	install -Dm0644 completions.zsh "${pkgdir}/usr/share/zsh/site-functions/_${_binname}"
+	install -Dm0644 cli-licenses.md "${pkgdir}/usr/share/licenses/${pkgname}/cli-licenses.md"
+}

@@ -1,0 +1,1250 @@
+Linux: build only the Wayland backend and omit WebRTC and screen capture.
+Reuse the existing no-media backend, reject room creation/joining, and remove
+live collaboration controls, key bindings, and microphone recording. Keep local editing and Git.
+Use the packaged cargo-about with its --fail check for license generation.
+
+Omit obsolete WebRTC library search paths and honor release commit metadata.
+
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -10189,10 +10189,8 @@
+  "settings",
+  "simplelog",
+  "smallvec",
+- "tokio",
+  "ui",
+  "util",
+- "webrtc-sys",
+  "zed-scap",
+ ]
+ 
+@@ -15318,7 +15316,6 @@
+  "dasp_sample",
+  "hound",
+  "num-rational",
+- "rtrb",
+  "symphonia",
+  "thiserror 2.0.17",
+ ]
+@@ -15434,12 +15431,6 @@
+  "libc",
+  "windows-sys 0.52.0",
+ ]
+-
+-[[package]]
+-name = "rtrb"
+-version = "0.3.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "ad8388ea1a9e0ea807e442e8263a699e7edcb320ecbcd21b4fa8ff859acce3ba"
+ 
+ [[package]]
+ name = "runtimelib"
+@@ -22425,7 +22416,6 @@
+  "client",
+  "clock",
+  "codestral",
+- "collab_ui",
+  "collections",
+  "command_palette",
+  "component_preview",
+@@ -22500,7 +22490,6 @@
+  "parking_lot",
+  "paths",
+  "picker",
+- "pkg-config",
+  "pretty_assertions",
+  "profiling",
+  "project",
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -452,7 +452,7 @@
+ remote_server = { path = "crates/remote_server" }
+ repl = { path = "crates/repl" }
+ reqwest_client = { path = "crates/reqwest_client" }
+-rodio = { git = "https://github.com/RustAudio/rodio", rev = "e50e726ddd0292f6ef9de0dda6b90af4ed1fb66a", default-features = false, features = ["wav", "playback", "wav_output", "recording"] }
++rodio = { git = "https://github.com/RustAudio/rodio", rev = "e50e726ddd0292f6ef9de0dda6b90af4ed1fb66a", default-features = false, features = ["wav", "playback", "wav_output"] }
+ rope = { path = "crates/rope" }
+ rpc = { path = "crates/rpc" }
+ sandbox = { path = "crates/sandbox" }
+--- a/assets/keymaps/default-linux.json
++++ b/assets/keymaps/default-linux.json
+@@ -923,7 +923,6 @@
+   {
+     "context": "!Terminal",
+     "bindings": {
+-      "ctrl-shift-c": "collab_panel::ToggleFocus",
+     },
+   },
+   {
+@@ -1186,34 +1185,6 @@
+     },
+   },
+   {
+-    "context": "CollabPanel && not_editing",
+-    "bindings": {
+-      "ctrl-backspace": "collab_panel::Remove",
+-      "space": "menu::Confirm",
+-    },
+-  },
+-  {
+-    "context": "CollabPanel",
+-    "bindings": {
+-      "alt-up": "collab_panel::MoveChannelUp",
+-      "alt-down": "collab_panel::MoveChannelDown",
+-      "alt-enter": "collab_panel::OpenSelectedChannelNotes",
+-      "shift-enter": "collab_panel::ToggleSelectedChannelFavorite",
+-    },
+-  },
+-  {
+-    "context": "(CollabPanel && editing) > Editor",
+-    "bindings": {
+-      "space": "collab_panel::InsertSpace",
+-    },
+-  },
+-  {
+-    "context": "ChannelModal",
+-    "bindings": {
+-      "tab": "channel_modal::ToggleMode",
+-    },
+-  },
+-  {
+     "context": "CallHierarchyPicker > Picker > Editor",
+     "bindings": {
+       "ctrl-k ctrl-h": "call_hierarchy::ToggleDirection",
+@@ -1239,12 +1210,6 @@
+     "context": "LspCommandSelector > Picker > Editor",
+     "bindings": {
+       "tab": "lsp_command_selector::ToggleArgumentsFocus",
+-    },
+-  },
+-  {
+-    "context": "ChannelModal > Picker > Editor",
+-    "bindings": {
+-      "tab": "channel_modal::ToggleMode",
+     },
+   },
+   {
+--- a/assets/keymaps/default-macos.json
++++ b/assets/keymaps/default-macos.json
+@@ -967,7 +967,6 @@
+     "bindings": {
+       "ctrl-alt-cmd-f": "workspace::FollowNextCollaborator",
+       // TODO: Move this to a dock open action
+-      "cmd-shift-c": "collab_panel::ToggleFocus",
+       // Only available in debug builds: opens an element inspector for development.
+       "cmd-alt-i": "dev::ToggleInspector",
+       // Cycles the frame-time debug overlay between hidden, frame-time-only, and detailed modes.
+@@ -1231,38 +1230,6 @@
+     },
+   },
+   {
+-    "context": "CollabPanel && not_editing",
+-    "use_key_equivalents": true,
+-    "bindings": {
+-      "ctrl-backspace": "collab_panel::Remove",
+-      "space": "menu::Confirm",
+-    },
+-  },
+-  {
+-    "context": "CollabPanel",
+-    "use_key_equivalents": true,
+-    "bindings": {
+-      "alt-up": "collab_panel::MoveChannelUp",
+-      "alt-down": "collab_panel::MoveChannelDown",
+-      "alt-enter": "collab_panel::OpenSelectedChannelNotes",
+-      "shift-enter": "collab_panel::ToggleSelectedChannelFavorite",
+-    },
+-  },
+-  {
+-    "context": "(CollabPanel && editing) > Editor",
+-    "use_key_equivalents": true,
+-    "bindings": {
+-      "space": "collab_panel::InsertSpace",
+-    },
+-  },
+-  {
+-    "context": "ChannelModal",
+-    "use_key_equivalents": true,
+-    "bindings": {
+-      "tab": "channel_modal::ToggleMode",
+-    },
+-  },
+-  {
+     "context": "CallHierarchyPicker > Picker > Editor",
+     "use_key_equivalents": true,
+     "bindings": {
+@@ -1292,13 +1259,6 @@
+     "use_key_equivalents": true,
+     "bindings": {
+       "tab": "lsp_command_selector::ToggleArgumentsFocus",
+-    },
+-  },
+-  {
+-    "context": "ChannelModal > Picker > Editor",
+-    "use_key_equivalents": true,
+-    "bindings": {
+-      "tab": "channel_modal::ToggleMode",
+     },
+   },
+   {
+--- a/assets/keymaps/default-windows.json
++++ b/assets/keymaps/default-windows.json
+@@ -923,7 +923,6 @@
+     "context": "!Terminal",
+     "use_key_equivalents": true,
+     "bindings": {
+-      "ctrl-shift-c": "collab_panel::ToggleFocus",
+     },
+   },
+   {
+@@ -1188,38 +1187,6 @@
+     },
+   },
+   {
+-    "context": "CollabPanel && not_editing",
+-    "use_key_equivalents": true,
+-    "bindings": {
+-      "ctrl-backspace": "collab_panel::Remove",
+-      "space": "menu::Confirm",
+-    },
+-  },
+-  {
+-    "context": "CollabPanel",
+-    "use_key_equivalents": true,
+-    "bindings": {
+-      "alt-up": "collab_panel::MoveChannelUp",
+-      "alt-down": "collab_panel::MoveChannelDown",
+-      "alt-enter": "collab_panel::OpenSelectedChannelNotes",
+-      "shift-enter": "collab_panel::ToggleSelectedChannelFavorite",
+-    },
+-  },
+-  {
+-    "context": "(CollabPanel && editing) > Editor",
+-    "use_key_equivalents": true,
+-    "bindings": {
+-      "space": "collab_panel::InsertSpace",
+-    },
+-  },
+-  {
+-    "context": "ChannelModal",
+-    "use_key_equivalents": true,
+-    "bindings": {
+-      "tab": "channel_modal::ToggleMode",
+-    },
+-  },
+-  {
+     "context": "CallHierarchyPicker > Picker > Editor",
+     "use_key_equivalents": true,
+     "bindings": {
+@@ -1248,13 +1215,6 @@
+     "use_key_equivalents": true,
+     "bindings": {
+       "tab": "lsp_command_selector::ToggleArgumentsFocus",
+-    },
+-  },
+-  {
+-    "context": "ChannelModal > Picker > Editor",
+-    "use_key_equivalents": true,
+-    "bindings": {
+-      "tab": "channel_modal::ToggleMode",
+     },
+   },
+   {
+--- a/crates/audio/Cargo.toml
++++ b/crates/audio/Cargo.toml
+@@ -25,5 +25,5 @@
+ thiserror.workspace = true
+ util.workspace = true
+ 
+-[target.'cfg(not(any(all(target_os = "windows", target_env = "gnu"), target_os = "freebsd")))'.dependencies]
++[target.'cfg(not(any(all(target_os = "windows", target_env = "gnu"), target_os = "freebsd", target_os = "linux")))'.dependencies]
+ libwebrtc.workspace = true
+--- a/crates/audio/src/audio.rs
++++ b/crates/audio/src/audio.rs
+@@ -16,7 +16,7 @@
+ // TODO(audio) replace with input test functionality in the audio crate
+ pub use audio_pipeline::RodioExt;
+ pub use audio_pipeline::init;
+-pub use audio_pipeline::{open_input_stream, open_test_output};
++pub use audio_pipeline::open_test_output;
+ 
+ #[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
+ pub enum Sound {
+--- a/crates/audio/src/audio_pipeline.rs
++++ b/crates/audio/src/audio_pipeline.rs
+@@ -112,41 +112,6 @@
+ 
+         Ok(source)
+     }
+-}
+-
+-pub fn open_input_stream(
+-    device_id: Option<DeviceId>,
+-) -> anyhow::Result<rodio::microphone::Microphone> {
+-    let builder = rodio::microphone::MicrophoneBuilder::new();
+-    let builder = if let Some(id) = device_id {
+-        // TODO(jk): upstream patch
+-        // if let Some(input_device) = default_host().device_by_id(id) {
+-        //     builder.device(input_device);
+-        // }
+-        let mut found = None;
+-        for input in rodio::microphone::available_inputs()? {
+-            if input.clone().into_inner().id()? == id {
+-                found = Some(builder.device(input));
+-                break;
+-            }
+-        }
+-        found.unwrap_or_else(|| builder.default_device())?
+-    } else {
+-        builder.default_device()?
+-    };
+-    let stream = builder
+-        .default_config()?
+-        .prefer_sample_rates([
+-            SAMPLE_RATE,
+-            SAMPLE_RATE.saturating_mul(rodio::nz!(2)),
+-            SAMPLE_RATE.saturating_mul(rodio::nz!(3)),
+-            SAMPLE_RATE.saturating_mul(rodio::nz!(4)),
+-        ])
+-        .prefer_channel_counts([rodio::nz!(1), rodio::nz!(2), rodio::nz!(3), rodio::nz!(4)])
+-        .prefer_buffer_sizes(512..)
+-        .open_stream()?;
+-    log::info!("Opened microphone: {:?}", stream.config());
+-    Ok(stream)
+ }
+ 
+ pub fn resolve_device(device_id: Option<&DeviceId>, input: bool) -> anyhow::Result<cpal::Device> {
+--- a/crates/audio/src/audio_pipeline/echo_canceller.rs
++++ b/crates/audio/src/audio_pipeline/echo_canceller.rs
+@@ -1,4 +1,8 @@
+-#[cfg(not(any(all(target_os = "windows", target_env = "gnu"), target_os = "freebsd")))]
++#[cfg(not(any(
++    all(target_os = "windows", target_env = "gnu"),
++    target_os = "freebsd",
++    target_os = "linux"
++)))]
+ mod real_implementation {
+     use anyhow::Context;
+     use libwebrtc::native::apm;
+@@ -38,7 +42,11 @@
+     }
+ }
+ 
+-#[cfg(any(all(target_os = "windows", target_env = "gnu"), target_os = "freebsd"))]
++#[cfg(any(
++    all(target_os = "windows", target_env = "gnu"),
++    target_os = "freebsd",
++    target_os = "linux"
++))]
+ mod fake_implementation {
+     #[derive(Clone, Default)]
+     pub struct EchoCanceller;
+@@ -51,7 +59,15 @@
+     }
+ }
+ 
+-#[cfg(any(all(target_os = "windows", target_env = "gnu"), target_os = "freebsd"))]
++#[cfg(any(
++    all(target_os = "windows", target_env = "gnu"),
++    target_os = "freebsd",
++    target_os = "linux"
++))]
+ pub use fake_implementation::EchoCanceller;
+-#[cfg(not(any(all(target_os = "windows", target_env = "gnu"), target_os = "freebsd")))]
++#[cfg(not(any(
++    all(target_os = "windows", target_env = "gnu"),
++    target_os = "freebsd",
++    target_os = "linux"
++)))]
+ pub use real_implementation::EchoCanceller;
+--- a/crates/call/Cargo.toml
++++ b/crates/call/Cargo.toml
+@@ -31,7 +31,7 @@
+ fs.workspace = true
+ futures.workspace = true
+ feature_flags.workspace = true
+-gpui = { workspace = true, features = ["screen-capture"] }
++gpui.workspace = true
+ gpui_tokio.workspace = true
+ language.workspace = true
+ livekit_client.workspace = true
+--- a/crates/call/src/call_impl/diagnostics.rs
++++ b/crates/call/src/call_impl/diagnostics.rs
+@@ -310,7 +310,7 @@
+         test,
+         feature = "test-support",
+         all(target_os = "windows", target_env = "gnu"),
+-        target_os = "freebsd"
++        any(target_os = "freebsd", target_os = "linux")
+     )
+ ))]
+ fn compute_remote_audio_stats(
+@@ -330,7 +330,7 @@
+         test,
+         feature = "test-support",
+         all(target_os = "windows", target_env = "gnu"),
+-        target_os = "freebsd"
++        any(target_os = "freebsd", target_os = "linux")
+     ))
+ ))]
+ fn compute_remote_audio_stats(
+@@ -463,7 +463,7 @@
+         test,
+         feature = "test-support",
+         all(target_os = "windows", target_env = "gnu"),
+-        target_os = "freebsd"
++        any(target_os = "freebsd", target_os = "linux")
+     )
+ ))]
+ fn extract_metrics(
+@@ -481,7 +481,7 @@
+         test,
+         feature = "test-support",
+         all(target_os = "windows", target_env = "gnu"),
+-        target_os = "freebsd"
++        any(target_os = "freebsd", target_os = "linux")
+     ))
+ ))]
+ fn extract_metrics(
+--- a/crates/call/src/call_impl/mod.rs
++++ b/crates/call/src/call_impl/mod.rs
+@@ -417,10 +417,7 @@
+             pending_invites: Default::default(),
+             incoming_call: watch::channel(),
+             _join_debouncer: OneAtATime { cancel: None },
+-            _subscriptions: vec![
+-                client.add_request_handler(cx.weak_entity(), Self::handle_incoming_call),
+-                client.add_message_handler(cx.weak_entity(), Self::handle_call_canceled),
+-            ],
++            _subscriptions: Vec::new(),
+             client,
+             user_store,
+         }
+--- a/crates/call/src/call_impl/room.rs
++++ b/crates/call/src/call_impl/room.rs
+@@ -171,84 +171,31 @@
+     }
+ 
+     pub(crate) fn create(
+-        called_user_id: u64,
+-        initial_project: Option<Entity<Project>>,
+-        client: Arc<Client>,
+-        user_store: Entity<UserStore>,
+-        cx: &mut App,
++        _called_user_id: u64,
++        _initial_project: Option<Entity<Project>>,
++        _client: Arc<Client>,
++        _user_store: Entity<UserStore>,
++        _cx: &mut App,
+     ) -> Task<Result<Entity<Self>>> {
+-        cx.spawn(async move |cx| {
+-            let response = client.request(proto::CreateRoom {}).await?;
+-            let room_proto = response.room.context("invalid room")?;
+-            let room = cx.new(|cx| {
+-                let mut room = Self::new(
+-                    room_proto.id,
+-                    None,
+-                    response.live_kit_connection_info,
+-                    client,
+-                    user_store,
+-                    cx,
+-                );
+-                if let Some(participant) = room_proto.participants.first() {
+-                    room.local_participant.role = participant.role()
+-                }
+-                room
+-            });
+-
+-            let initial_project_id = if let Some(initial_project) = initial_project {
+-                let initial_project_id = room
+-                    .update(cx, |room, cx| {
+-                        room.share_project(initial_project.clone(), cx)
+-                    })
+-                    .await?;
+-                Some(initial_project_id)
+-            } else {
+-                None
+-            };
+-
+-            let did_join = room
+-                .update(cx, |room, cx| {
+-                    room.leave_when_empty = true;
+-                    room.call(called_user_id, initial_project_id, cx)
+-                })
+-                .await;
+-            match did_join {
+-                Ok(()) => Ok(room),
+-                Err(error) => Err(error.context("room creation failed")),
+-            }
+-        })
++        Task::ready(Err(anyhow!("Live collaboration is disabled in this build")))
+     }
+ 
+     pub(crate) async fn join_channel(
+-        channel_id: ChannelId,
+-        client: Arc<Client>,
+-        user_store: Entity<UserStore>,
+-        cx: AsyncApp,
++        _channel_id: ChannelId,
++        _client: Arc<Client>,
++        _user_store: Entity<UserStore>,
++        _cx: AsyncApp,
+     ) -> Result<Entity<Self>> {
+-        Self::from_join_response(
+-            client
+-                .request(proto::JoinChannel {
+-                    channel_id: channel_id.0,
+-                })
+-                .await?,
+-            client,
+-            user_store,
+-            cx,
+-        )
++        anyhow::bail!("Live collaboration is disabled in this build")
+     }
+ 
+     pub(crate) async fn join(
+-        room_id: u64,
+-        client: Arc<Client>,
+-        user_store: Entity<UserStore>,
+-        cx: AsyncApp,
++        _room_id: u64,
++        _client: Arc<Client>,
++        _user_store: Entity<UserStore>,
++        _cx: AsyncApp,
+     ) -> Result<Entity<Self>> {
+-        Self::from_join_response(
+-            client.request(proto::JoinRoom { id: room_id }).await?,
+-            client,
+-            user_store,
+-            cx,
+-        )
++        anyhow::bail!("Live collaboration is disabled in this build")
+     }
+ 
+     fn released(&mut self, cx: &mut App) {
+--- a/crates/cli/build.rs
++++ b/crates/cli/build.rs
+@@ -2,6 +2,8 @@
+ use std::process::Command;
+ 
+ fn main() {
++    println!("cargo:rerun-if-env-changed=ZED_UPDATE_EXPLANATION");
++    println!("cargo:rerun-if-env-changed=ZED_COMMIT_SHA");
+     if std::env::var("ZED_UPDATE_EXPLANATION").is_ok() {
+         println!(r#"cargo:rustc-cfg=feature="no-bundled-uninstall""#);
+     }
+@@ -12,15 +14,15 @@
+ 
+     // Populate git sha environment variable if git is available
+     println!("cargo:rerun-if-changed=../../.git/logs/HEAD");
+-    if let Some(output) = Command::new("git")
+-        .args(["rev-parse", "HEAD"])
+-        .output()
+-        .ok()
+-        .filter(|output| output.status.success())
+-    {
+-        let git_sha = String::from_utf8_lossy(&output.stdout);
+-        let git_sha = git_sha.trim();
+-
++    let git_sha = std::env::var("ZED_COMMIT_SHA").ok().or_else(|| {
++        Command::new("git")
++            .args(["rev-parse", "HEAD"])
++            .output()
++            .ok()
++            .filter(|output| output.status.success())
++            .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_owned())
++    });
++    if let Some(git_sha) = git_sha {
+         println!("cargo:rustc-env=ZED_COMMIT_SHA={git_sha}");
+     }
+     if let Some(build_identifier) = option_env!("GITHUB_RUN_NUMBER") {
+--- a/crates/livekit_client/Cargo.toml
++++ b/crates/livekit_client/Cargo.toml
+@@ -26,7 +26,7 @@
+ collections.workspace = true
+ cpal.workspace = true
+ futures.workspace = true
+-gpui = { workspace = true, features = ["screen-capture", "x11", "wayland"] }
++gpui.workspace = true
+ gpui_tokio.workspace = true
+ http_client_tls.workspace = true
+ image.workspace = true
+@@ -43,20 +43,16 @@
+ ui.workspace = true
+ util.workspace = true
+ 
+-[target.'cfg(any(all(target_os = "windows", target_env = "gnu"), target_os = "freebsd"))'.dependencies]
++[target.'cfg(any(all(target_os = "windows", target_env = "gnu"), target_os = "freebsd", target_os = "linux"))'.dependencies]
+ livekit_api.workspace = true
+ nanoid.workspace = true
+ postage = { workspace = true, features = ["futures-traits", "logging", "blocking"] }
+ 
+-[target.'cfg(not(any(all(target_os = "windows", target_env = "gnu"), target_os = "freebsd")))'.dependencies]
++[target.'cfg(not(any(all(target_os = "windows", target_env = "gnu"), target_os = "freebsd", target_os = "linux")))'.dependencies]
+ libwebrtc.workspace = true
+ livekit.workspace = true
+ 
+-[target.'cfg(target_os = "linux")'.dependencies]
+-tokio = { workspace = true, features = ["time"] }
+-webrtc-sys.workspace = true
+-
+-[target.'cfg(any(target_os = "linux", target_os = "freebsd", target_os = "windows"))'.dependencies]
++[target.'cfg(any(target_os = "freebsd", target_os = "windows"))'.dependencies]
+ scap.workspace = true
+ 
+ [target.'cfg(target_os = "macos")'.dependencies]
+--- a/crates/livekit_client/src/lib.rs
++++ b/crates/livekit_client/src/lib.rs
+@@ -7,16 +7,13 @@
+ use rodio::DeviceTrait as _;
+ use serde::{Deserialize, Serialize};
+ 
+-mod record;
+-pub use record::CaptureInput;
+-
+ #[cfg(any(
+     rust_analyzer,
+     not(any(
+         test,
+         feature = "test-support",
+         all(target_os = "windows", target_env = "gnu"),
+-        target_os = "freebsd"
++        any(target_os = "freebsd", target_os = "linux")
+     ))
+ ))]
+ mod livekit_client;
+@@ -26,7 +23,7 @@
+         test,
+         feature = "test-support",
+         all(target_os = "windows", target_env = "gnu"),
+-        target_os = "freebsd"
++        any(target_os = "freebsd", target_os = "linux")
+     ))
+ ))]
+ pub use livekit_client::*;
+@@ -37,7 +34,7 @@
+         test,
+         feature = "test-support",
+         all(target_os = "windows", target_env = "gnu"),
+-        target_os = "freebsd"
++        any(target_os = "freebsd", target_os = "linux")
+     )
+ ))]
+ mod mock_client;
+@@ -47,7 +44,7 @@
+         test,
+         feature = "test-support",
+         all(target_os = "windows", target_env = "gnu"),
+-        target_os = "freebsd"
++        any(target_os = "freebsd", target_os = "linux")
+     )
+ ))]
+ pub mod test;
+@@ -57,7 +54,7 @@
+         test,
+         feature = "test-support",
+         all(target_os = "windows", target_env = "gnu"),
+-        target_os = "freebsd"
++        any(target_os = "freebsd", target_os = "linux")
+     )
+ ))]
+ pub use mock_client::*;
+--- a/crates/settings_ui/src/page_data.rs
++++ b/crates/settings_ui/src/page_data.rs
+@@ -1,8 +1,8 @@
+ use gpui::{Action as _, App};
+ use itertools::Itertools as _;
+ use settings::{
+-    AudioInputDeviceName, AudioOutputDeviceName, EditPredictionDataCollectionChoice,
+-    LanguageSettingsContent, SemanticTokens, SettingsContent,
++    AudioOutputDeviceName, EditPredictionDataCollectionChoice, LanguageSettingsContent,
++    SemanticTokens, SettingsContent,
+ };
+ use std::sync::{Arc, OnceLock};
+ use strum::{EnumMessage, IntoDiscriminant as _, VariantArray};
+@@ -13,9 +13,9 @@
+     ActionLink, DynamicItem, PROJECT, SettingField, SettingItem, SettingsFieldMetadata,
+     SettingsPage, SettingsPageItem, SubPageLink, USER, active_language, all_language_names,
+     pages::{
+-        open_audio_test_window, render_edit_prediction_setup_page, render_external_agents_page,
+-        render_llm_providers_page, render_mcp_servers_page, render_sandbox_settings_page,
+-        render_skills_setup_page, render_tool_permissions_setup_page,
++        render_edit_prediction_setup_page, render_external_agents_page, render_llm_providers_page,
++        render_mcp_servers_page, render_sandbox_settings_page, render_skills_setup_page,
++        render_tool_permissions_setup_page,
+     },
+ };
+ 
+@@ -26,8 +26,6 @@
+ 
+ const DEFAULT_AUDIO_OUTPUT: AudioOutputDeviceName = AudioOutputDeviceName(None);
+ const DEFAULT_EMPTY_AUDIO_OUTPUT: Option<&AudioOutputDeviceName> = Some(&DEFAULT_AUDIO_OUTPUT);
+-const DEFAULT_AUDIO_INPUT: AudioInputDeviceName = AudioInputDeviceName(None);
+-const DEFAULT_EMPTY_AUDIO_INPUT: Option<&AudioInputDeviceName> = Some(&DEFAULT_AUDIO_INPUT);
+ 
+ macro_rules! concat_sections {
+     (@vec, $($arr:expr),+ $(,)?) => {{
+@@ -75,7 +73,7 @@
+         debugger_page(),
+         terminal_page(),
+         version_control_page(),
+-        collaboration_page(),
++        audio_page(),
+         ai_page(cx),
+         network_page(),
+         developer_page(cx),
+@@ -6892,77 +6890,6 @@
+         ]
+     }
+ 
+-    fn collaboration_panel_section() -> [SettingsPageItem; 4] {
+-        [
+-            SettingsPageItem::SectionHeader("Collaboration Panel"),
+-            SettingsPageItem::SettingItem(SettingItem {
+-                title: "Collaboration Panel Button",
+-                description: "Show the collaboration panel button in the status bar.",
+-                field: Box::new(SettingField {
+-                    organization_override: None,
+-                    json_path: Some("collaboration_panel.button"),
+-                    pick: |settings_content| {
+-                        settings_content
+-                            .collaboration_panel
+-                            .as_ref()?
+-                            .button
+-                            .as_ref()
+-                    },
+-                    write: |settings_content, value, _| {
+-                        settings_content
+-                            .collaboration_panel
+-                            .get_or_insert_default()
+-                            .button = value;
+-                    },
+-                }),
+-                metadata: None,
+-                files: USER,
+-            }),
+-            SettingsPageItem::SettingItem(SettingItem {
+-                title: "Collaboration Panel Dock",
+-                description: "Where to dock the collaboration panel.",
+-                field: Box::new(SettingField {
+-                    organization_override: None,
+-                    json_path: Some("collaboration_panel.dock"),
+-                    pick: |settings_content| {
+-                        settings_content.collaboration_panel.as_ref()?.dock.as_ref()
+-                    },
+-                    write: |settings_content, value, _| {
+-                        settings_content
+-                            .collaboration_panel
+-                            .get_or_insert_default()
+-                            .dock = value;
+-                    },
+-                }),
+-                metadata: None,
+-                files: USER,
+-            }),
+-            SettingsPageItem::SettingItem(SettingItem {
+-                title: "Collaboration Panel Default Width",
+-                description: "Default width of the collaboration panel in pixels.",
+-                field: Box::new(SettingField {
+-                    organization_override: None,
+-                    json_path: Some("collaboration_panel.dock"),
+-                    pick: |settings_content| {
+-                        settings_content
+-                            .collaboration_panel
+-                            .as_ref()?
+-                            .default_width
+-                            .as_ref()
+-                    },
+-                    write: |settings_content, value, _| {
+-                        settings_content
+-                            .collaboration_panel
+-                            .get_or_insert_default()
+-                            .default_width = value;
+-                    },
+-                }),
+-                metadata: None,
+-                files: USER,
+-            }),
+-        ]
+-    }
+-
+     fn agent_panel_section() -> [SettingsPageItem; 7] {
+         [
+             SettingsPageItem::SectionHeader("Agent Panel"),
+@@ -7109,7 +7036,6 @@
+             outline_panel_section(),
+             git_panel_section(),
+             debugger_panel_section(),
+-            collaboration_panel_section(),
+             agent_panel_section(),
+         ],
+     }
+@@ -8623,108 +8549,33 @@
+     }
+ }
+ 
+-fn collaboration_page() -> SettingsPage {
+-    fn calls_section() -> [SettingsPageItem; 3] {
+-        [
+-            SettingsPageItem::SectionHeader("Calls"),
+-            SettingsPageItem::SettingItem(SettingItem {
+-                title: "Mute On Join",
+-                description: "Whether the microphone should be muted when joining a channel or a call.",
+-                field: Box::new(SettingField {
+-                    organization_override: None,
+-                    json_path: Some("calls.mute_on_join"),
+-                    pick: |settings_content| settings_content.calls.as_ref()?.mute_on_join.as_ref(),
+-                    write: |settings_content, value, _| {
+-                        settings_content.calls.get_or_insert_default().mute_on_join = value;
+-                    },
+-                }),
+-                metadata: None,
+-                files: USER,
+-            }),
+-            SettingsPageItem::SettingItem(SettingItem {
+-                title: "Share On Join",
+-                description: "Whether your current project should be shared when joining an empty channel.",
+-                field: Box::new(SettingField {
+-                    organization_override: None,
+-                    json_path: Some("calls.share_on_join"),
+-                    pick: |settings_content| {
+-                        settings_content.calls.as_ref()?.share_on_join.as_ref()
+-                    },
+-                    write: |settings_content, value, _| {
+-                        settings_content.calls.get_or_insert_default().share_on_join = value;
+-                    },
+-                }),
+-                metadata: None,
+-                files: USER,
+-            }),
+-        ]
+-    }
+-
+-    fn audio_settings() -> [SettingsPageItem; 3] {
+-        [
+-            SettingsPageItem::ActionLink(ActionLink {
+-                title: "Test Audio".into(),
+-                description: Some("Test your microphone and speaker setup".into()),
+-                button_text: "Test Audio".into(),
+-                on_click: Arc::new(|_settings_window, window, cx| {
+-                    open_audio_test_window(window, cx);
+-                }),
+-                files: USER,
+-            }),
+-            SettingsPageItem::SettingItem(SettingItem {
+-                title: "Output Audio Device",
+-                description: "Select output audio device",
+-                field: Box::new(SettingField {
+-                    organization_override: None,
+-                    json_path: Some("audio.experimental.output_audio_device"),
+-                    pick: |settings_content| {
+-                        settings_content
+-                            .audio
+-                            .as_ref()?
+-                            .output_audio_device
+-                            .as_ref()
+-                            .or(DEFAULT_EMPTY_AUDIO_OUTPUT)
+-                    },
+-                    write: |settings_content, value, _| {
+-                        settings_content
+-                            .audio
+-                            .get_or_insert_default()
+-                            .output_audio_device = value;
+-                    },
+-                }),
+-                metadata: None,
+-                files: USER,
+-            }),
+-            SettingsPageItem::SettingItem(SettingItem {
+-                title: "Input Audio Device",
+-                description: "Select input audio device",
+-                field: Box::new(SettingField {
+-                    organization_override: None,
+-                    json_path: Some("audio.experimental.input_audio_device"),
+-                    pick: |settings_content| {
+-                        settings_content
+-                            .audio
+-                            .as_ref()?
+-                            .input_audio_device
+-                            .as_ref()
+-                            .or(DEFAULT_EMPTY_AUDIO_INPUT)
+-                    },
+-                    write: |settings_content, value, _| {
+-                        settings_content
+-                            .audio
+-                            .get_or_insert_default()
+-                            .input_audio_device = value;
+-                    },
+-                }),
+-                metadata: None,
+-                files: USER,
+-            }),
+-        ]
+-    }
+-
++fn audio_page() -> SettingsPage {
+     SettingsPage {
+-        title: "Collaboration",
+-        items: concat_sections![calls_section(), audio_settings()],
++        title: "Audio",
++        items: Box::new([SettingsPageItem::SettingItem(SettingItem {
++            title: "Output Audio Device",
++            description: "Select output audio device",
++            field: Box::new(SettingField {
++                organization_override: None,
++                json_path: Some("audio.experimental.output_audio_device"),
++                pick: |settings_content| {
++                    settings_content
++                        .audio
++                        .as_ref()?
++                        .output_audio_device
++                        .as_ref()
++                        .or(DEFAULT_EMPTY_AUDIO_OUTPUT)
++                },
++                write: |settings_content, value, _| {
++                    settings_content
++                        .audio
++                        .get_or_insert_default()
++                        .output_audio_device = value;
++                },
++            }),
++            metadata: None,
++            files: USER,
++        })]),
+     }
+ }
+ 
+--- a/crates/settings_ui/src/pages.rs
++++ b/crates/settings_ui/src/pages.rs
+@@ -1,5 +1,4 @@
+ mod audio_input_output_setup;
+-mod audio_test_window;
+ mod edit_prediction_provider_setup;
+ mod external_agents_page;
+ mod feature_flags;
+@@ -13,7 +12,6 @@
+ pub(crate) use audio_input_output_setup::{
+     render_input_audio_device_dropdown, render_output_audio_device_dropdown,
+ };
+-pub(crate) use audio_test_window::open_audio_test_window;
+ pub(crate) use edit_prediction_provider_setup::render_edit_prediction_setup_page;
+ pub(crate) use external_agents_page::{
+     CustomAgentForm, render_add_agent_popover, render_external_agents_page,
+--- a/crates/title_bar/Cargo.toml
++++ b/crates/title_bar/Cargo.toml
+@@ -43,7 +43,7 @@
+ db.workspace = true
+ 
+ git_ui_core.workspace = true
+-gpui = { workspace = true, features = ["screen-capture"] }
++gpui.workspace = true
+ icons.workspace = true
+ livekit_client.workspace = true
+ project.workspace = true
+--- a/crates/title_bar/src/title_bar.rs
++++ b/crates/title_bar/src/title_bar.rs
+@@ -352,8 +352,6 @@
+                 .into_any_element(),
+         );
+ 
+-        children.push(self.render_collaborator_list(window, cx).into_any_element());
+-
+         if title_bar_settings.show_onboarding_banner {
+             if let Some(banner) = &self.banner {
+                 children.push(banner.clone().into_any_element())
+@@ -381,7 +379,6 @@
+                 .pr_1()
+                 .gap_1()
+                 .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
+-                .child(self.render_call_controls(window, cx))
+                 .children(self.render_connection_status(status, cx))
+                 .child(self.update_version.clone())
+                 .when(
+--- a/crates/zed/Cargo.toml
++++ b/crates/zed/Cargo.toml
+@@ -90,7 +90,6 @@
+ client.workspace = true
+ clock = { workspace = true, optional = true }
+ codestral.workspace = true
+-collab_ui.workspace = true
+ collections.workspace = true
+ command_palette.workspace = true
+ component_preview.workspace = true
+@@ -118,15 +117,13 @@
+ futures.workspace = true
+ git.workspace = true
+ git_hosting_providers.workspace = true
+-git_ui = { workspace = true, features = ["call"] }
++git_ui.workspace = true
+ git_ui_core.workspace = true
+ go_to_line.workspace = true
+ gpui = { workspace = true, features = ["profiler", "stacker"] }
+ gpui_platform = { workspace = true, features = [
+-    "screen-capture",
+     "font-kit",
+     "wayland",
+-    "x11",
+ ] }
+ gpui_tokio.workspace = true
+ hang_telemetry.workspace = true
+@@ -248,7 +245,7 @@
+ windows_resources.workspace = true
+ 
+ [target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies]
+-gpui = { workspace = true, features = ["profiler", "wayland", "x11"] }
++gpui = { workspace = true, features = ["profiler", "wayland"] }
+ ashpd = { workspace = true, features = ["notification"] }
+ image.workspace = true
+ 
+@@ -256,8 +253,6 @@
+ image.workspace = true
+ 
+ 
+-[target.'cfg(target_os = "linux")'.build-dependencies]
+-pkg-config = "0.3.22"
+ 
+ [dev-dependencies]
+ activity_indicator = { workspace = true, features = ["test-support"] }
+--- a/crates/zed/build.rs
++++ b/crates/zed/build.rs
+@@ -2,27 +2,6 @@
+ use std::process::Command;
+ 
+ fn main() {
+-    #[cfg(target_os = "linux")]
+-    {
+-        // Add rpaths for libraries that webrtc-sys dlopens at runtime.
+-        // This is mostly required for hosts with non-standard SO installation
+-        // locations such as NixOS.
+-        let dlopened_libs = ["libva", "libva-drm", "egl"];
+-
+-        let mut rpath_dirs = std::collections::BTreeSet::new();
+-        for lib in &dlopened_libs {
+-            if let Some(libdir) = pkg_config::get_variable(lib, "libdir").ok() {
+-                rpath_dirs.insert(libdir);
+-            } else {
+-                eprintln!("zed build.rs: {lib} not found in pkg-config's path");
+-            }
+-        }
+-
+-        for dir in &rpath_dirs {
+-            println!("cargo:rustc-link-arg=-Wl,-rpath,{dir}");
+-        }
+-    }
+-
+     if cfg!(target_os = "macos") {
+         println!("cargo:rustc-env=MACOSX_DEPLOYMENT_TARGET=10.15.7");
+ 
+@@ -46,6 +25,7 @@
+         std::env::var("TARGET").unwrap()
+     );
+ 
++    println!("cargo:rerun-if-env-changed=ZED_COMMIT_SHA");
+     let git_sha = match std::env::var("ZED_COMMIT_SHA").ok() {
+         Some(git_sha) => {
+             // In deterministic build environments such as Nix, we inject the commit sha into the build script.
+--- a/crates/zed/src/main.rs
++++ b/crates/zed/src/main.rs
+@@ -20,14 +20,13 @@
+ use clap::Parser;
+ use cli::FORCE_CLI_MODE_ENV_VAR_NAME;
+ use client::{Client, ProxySettings, RefreshLlmTokenListener, UserStore, parse_zed_link};
+-use collab_ui::channel_view::ChannelView;
+ use collections::HashMap;
+ use crashes::InitCrashHandler;
+ use db::kvp::{GlobalKeyValueStore, KeyValueStore};
+ use editor::Editor;
+ use extension::ExtensionHostProxy;
+ use fs::{Fs, RealFs};
+-use futures::{FutureExt, StreamExt, channel::oneshot, future};
++use futures::{FutureExt, StreamExt, channel::oneshot};
+ use git::GitHostingProviderRegistry;
+ use git_ui::clone::clone_and_open;
+ use gpui::{
+@@ -64,13 +63,11 @@
+ };
+ use theme::{ActiveTheme, GlobalTheme, ThemeRegistry};
+ use theme_settings::load_user_theme;
+-use util::{ResultExt, maybe};
++use util::ResultExt;
+ use uuid::Uuid;
+ use workspace::{
+     AppState, MultiWorkspace, SerializedWorkspaceLocation, SessionWorkspace, Toast,
+-    WorkspaceSettings, WorkspaceStore,
+-    notifications::{NotificationId, NotifyResultExt},
+-    restore_multiworkspace,
++    WorkspaceSettings, WorkspaceStore, notifications::NotificationId, restore_multiworkspace,
+ };
+ use zed::{
+     OpenListener, OpenRequest, RawOpenRequest, app_menus, build_window_options,
+@@ -772,7 +769,7 @@
+         language_tools::init(cx);
+         call::init(app_state.client.clone(), app_state.user_store.clone(), cx);
+         notifications::init(app_state.client.clone(), app_state.user_store.clone(), cx);
+-        collab_ui::init(&app_state, cx);
++        title_bar::init(cx);
+         git_ui::init(cx);
+         feedback::init(cx);
+         markdown_preview::init(cx);
+@@ -1307,55 +1304,10 @@
+ 
+     if !request.open_channel_notes.is_empty() || request.join_channel.is_some() {
+         cx.spawn(async move |cx| {
+-            let result = maybe!(async {
+-                if let Some(task) = task {
+-                    task.await?;
+-                }
+-                let client = app_state.client.clone();
+-                // we continue even if connection fails as join_channel/ open channel notes will
+-                // show a visible error message.
+-                client.connect(true, cx).await.into_response().log_err();
+-
+-                if let Some(channel_id) = request.join_channel {
+-                    cx.update(|cx| {
+-                        workspace::join_channel(
+-                            client::ChannelId(channel_id),
+-                            app_state.clone(),
+-                            None,
+-                            None,
+-                            cx,
+-                        )
+-                    })
+-                    .await?;
+-                }
+-
+-                let workspace_window =
+-                    workspace::get_any_active_multi_workspace(app_state, cx.clone()).await?;
+-
+-                let workspace = workspace_window.read_with(cx, |mw, _| mw.workspace().clone())?;
+-                let weak_workspace = workspace.downgrade();
+-
+-                let mut promises = Vec::new();
+-                for (channel_id, heading) in request.open_channel_notes {
+-                    promises.push(cx.update_window(workspace_window.into(), |_, window, cx| {
+-                        ChannelView::open(
+-                            client::ChannelId(channel_id),
+-                            heading,
+-                            workspace.clone(),
+-                            window,
+-                            cx,
+-                        )
+-                    })?)
+-                }
+-                for result in future::join_all(promises).await {
+-                    result.notify_workspace_async_err(weak_workspace.clone(), cx);
+-                }
+-                anyhow::Ok(())
+-            })
+-            .await;
+-            if let Err(err) = result {
+-                fail_to_open_window_async(err, cx);
+-            }
++            fail_to_open_window_async(
++                anyhow::anyhow!("Live collaboration is disabled in this build"),
++                cx,
++            );
+         })
+         .detach()
+     } else if let Some(task) = task {
+--- a/crates/zed/src/zed.rs
++++ b/crates/zed/src/zed.rs
+@@ -780,8 +780,6 @@
+         let outline_panel = OutlinePanel::load(workspace_handle.clone(), cx.clone());
+         let terminal_panel = TerminalPanel::load(workspace_handle.clone(), cx.clone());
+         let git_panel = GitPanel::load(workspace_handle.clone(), cx.clone());
+-        let channels_panel =
+-            collab_ui::collab_panel::CollabPanel::load(workspace_handle.clone(), cx.clone());
+         let debug_panel = DebugPanel::load(workspace_handle.clone(), cx);
+ 
+         async fn add_panel_when_ready(
+@@ -804,7 +802,6 @@
+             add_panel_when_ready(outline_panel, workspace_handle.clone(), cx.clone()),
+             add_panel_when_ready(terminal_panel, workspace_handle.clone(), cx.clone()),
+             add_panel_when_ready(git_panel, workspace_handle.clone(), cx.clone()),
+-            add_panel_when_ready(channels_panel, workspace_handle.clone(), cx.clone()),
+             add_panel_when_ready(debug_panel, workspace_handle.clone(), cx.clone()),
+             initialize_agent_panel(workspace_handle.clone(), cx.clone()).map(|r| r.log_err()),
+         );
+@@ -1317,14 +1314,6 @@
+         )
+         .register_action(
+             |workspace: &mut Workspace,
+-             _: &collab_ui::collab_panel::ToggleFocus,
+-             window: &mut Window,
+-             cx: &mut Context<Workspace>| {
+-                workspace.toggle_panel_focus::<collab_ui::collab_panel::CollabPanel>(window, cx);
+-            },
+-        )
+-        .register_action(
+-            |workspace: &mut Workspace,
+              _: &terminal_panel::ToggleFocus,
+              window: &mut Window,
+              cx: &mut Context<Workspace>| {
+@@ -6171,7 +6160,7 @@
+             release_channel::init(Version::new(0, 0, 0), cx);
+             command_palette::init(cx);
+             editor::init(cx);
+-            collab_ui::init(&app_state, cx);
++            title_bar::init(cx);
+             git_ui::init(cx);
+             project_panel::init(cx);
+             outline_panel::init(cx);
+--- a/crates/zed/src/zed/app_menus.rs
++++ b/crates/zed/src/zed/app_menus.rs
+@@ -1,4 +1,3 @@
+-use collab_ui::collab_panel;
+ use gpui::{App, Menu, MenuItem, OsAction};
+ use project::DisableAiSettings;
+ use release_channel::ReleaseChannel;
+@@ -42,7 +41,6 @@
+         MenuItem::separator(),
+         MenuItem::action("Project Panel", project_panel::ToggleFocus),
+         MenuItem::action("Outline Panel", outline_panel::ToggleFocus),
+-        MenuItem::action("Collab Panel", collab_panel::ToggleFocus),
+         MenuItem::action("Terminal Panel", terminal_panel::Toggle),
+         MenuItem::action("Debugger Panel", debug_panel::ToggleFocus),
+     ];
+--- a/script/generate-licenses
++++ b/script/generate-licenses
+@@ -2,18 +2,8 @@
+ 
+ set -euo pipefail
+ 
+-CARGO_ABOUT_VERSION="0.8.2"
+ OUTPUT_FILE="${1:-$(pwd)/assets/licenses.md}"
+ TEMPLATE_FILE="script/licenses/template.md.hbs"
+-
+-fail_on_stderr() {
+-    local tmpfile=$(mktemp)
+-    "$@" 2> >(tee "$tmpfile" >&2)
+-    local rc=$?
+-    [ -s "$tmpfile" ] && rc=1
+-    rm "$tmpfile"
+-    return $rc
+-}
+ 
+ echo -n "" >"$OUTPUT_FILE"
+ 
+@@ -27,18 +17,12 @@
+     echo -e "\n# ###### CODE LICENSES ######\n"
+ } >>"$OUTPUT_FILE"
+ 
+-if ! cargo about --version | grep "cargo-about $CARGO_ABOUT_VERSION" &>/dev/null; then
+-    echo "Installing cargo-about@$CARGO_ABOUT_VERSION..."
+-    cargo install "cargo-about@$CARGO_ABOUT_VERSION"
+-else
+-    echo "cargo-about@$CARGO_ABOUT_VERSION is already installed."
+-fi
+-
+ echo "Generating cargo licenses"
+ if [ -z "${ALLOW_MISSING_LICENSES-}" ]; then FAIL_FLAG=--fail; else FAIL_FLAG=""; fi
+-if [ -z "${ALLOW_MISSING_LICENSES-}" ]; then WRAPPER=fail_on_stderr; else WRAPPER=""; fi
+ set -x
+-$WRAPPER cargo about generate \
++cargo about generate \
++    --locked --target x86_64-unknown-linux-gnu \
++    --no-default-features --features gpui_platform/wayland \
+     $FAIL_FLAG \
+     -c script/licenses/zed-licenses.toml \
+     "$TEMPLATE_FILE" >>"$OUTPUT_FILE"
