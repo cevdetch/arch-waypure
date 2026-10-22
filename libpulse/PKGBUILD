@@ -3,7 +3,7 @@
 
 _pkgname=libpulse
 pkgname=${_pkgname}-waypure
-pkgver=17.0+r98+gb096704c0
+pkgver=17.0+r134+g77d25a1e6
 pkgrel=1
 pkgdesc="A featureful, general-purpose sound server (client library)"
 arch=('x86_64')
@@ -41,11 +41,11 @@ provides=(
 conflicts=("${_pkgname}")
 replaces=("${_pkgname}")
 backup=('etc/pulse/client.conf')
-_commit=b096704c0d42c5e784deb781a07b23cfb5286a82 # master, same as Arch
+_commit=77d25a1e613095bdf87a1d13b65e7c330565077a # master, same as Arch
 source=(
   "git+https://gitlab.freedesktop.org/pulseaudio/pulseaudio.git#commit=$_commit"
 )
-sha256sums=('SKIP')
+sha256sums=('3b0b49712a7f8c27b00648499e95ed9703614ea291035c951ac4a04521c74dff')
 
 pkgver() {
   cd pulseaudio
