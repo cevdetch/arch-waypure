@@ -3,7 +3,7 @@
 
 _pkgname=zed
 pkgname=${_pkgname}-waypure
-pkgver=1.24.3
+pkgver=1.25.2
 pkgrel=1
 pkgdesc="A Wayland-native code editor without calls or live collaboration"
 arch=('x86_64')
@@ -46,10 +46,8 @@ source=(
   "${url}/archive/v${pkgver}/${_pkgname}-${pkgver}.tar.gz"
   wayland-local-only.patch
 )
-sha256sums=(
-  '69e06d42fe32af31fc549001e3ccb6397610deacf6ccc3482a2bdb0a629bc269'
-  'e125a03f473d7dca0dd2d7427cfa54d4378db9ee2ddfc957e7a7817da269016b'
-)
+sha256sums=('130215b2213bd839cfba673292be84ec4ad0ca0dcc19f44232b9a94c22cc8449'
+            '97c92ea568994667aac9778bbeff55269e12318fc29100b476df40b6f6914f7f')
 
 _binname=zeditor
 _appid=dev.zed.Zed

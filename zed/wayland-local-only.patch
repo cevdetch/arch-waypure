@@ -7,7 +7,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
 
 --- a/Cargo.lock
 +++ b/Cargo.lock
-@@ -10189,10 +10189,8 @@
+@@ -10124,10 +10124,8 @@
   "settings",
   "simplelog",
   "smallvec",
@@ -18,7 +18,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
   "zed-scap",
  ]
  
-@@ -15318,7 +15316,6 @@
+@@ -15299,7 +15297,6 @@
   "dasp_sample",
   "hound",
   "num-rational",
@@ -26,7 +26,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
   "symphonia",
   "thiserror 2.0.17",
  ]
-@@ -15434,12 +15431,6 @@
+@@ -15415,12 +15412,6 @@
   "libc",
   "windows-sys 0.52.0",
  ]
@@ -39,7 +39,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
  
  [[package]]
  name = "runtimelib"
-@@ -22425,7 +22416,6 @@
+@@ -22423,7 +22414,6 @@
   "client",
   "clock",
   "codestral",
@@ -47,7 +47,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
   "collections",
   "command_palette",
   "component_preview",
-@@ -22500,7 +22490,6 @@
+@@ -22498,7 +22488,6 @@
   "parking_lot",
   "paths",
   "picker",
@@ -61,8 +61,8 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
  remote_server = { path = "crates/remote_server" }
  repl = { path = "crates/repl" }
  reqwest_client = { path = "crates/reqwest_client" }
--rodio = { git = "https://github.com/RustAudio/rodio", rev = "e50e726ddd0292f6ef9de0dda6b90af4ed1fb66a", default-features = false, features = ["wav", "playback", "wav_output", "recording"] }
-+rodio = { git = "https://github.com/RustAudio/rodio", rev = "e50e726ddd0292f6ef9de0dda6b90af4ed1fb66a", default-features = false, features = ["wav", "playback", "wav_output"] }
+-rodio = { git = "https://github.com/RustAudio/rodio", rev = "3ee9745862279ce1d18db593155016e7ce024aeb", default-features = false, features = ["wav", "playback", "wav_output", "recording"] }
++rodio = { git = "https://github.com/RustAudio/rodio", rev = "3ee9745862279ce1d18db593155016e7ce024aeb", default-features = false, features = ["wav", "playback", "wav_output"] }
  rope = { path = "crates/rope" }
  rpc = { path = "crates/rpc" }
  sandbox = { path = "crates/sandbox" }
@@ -252,9 +252,9 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
    {
 --- a/crates/audio/Cargo.toml
 +++ b/crates/audio/Cargo.toml
-@@ -25,5 +25,5 @@
- thiserror.workspace = true
- util.workspace = true
+@@ -29,5 +29,5 @@
+ [dev-dependencies]
+ gpui = { workspace = true, features = ["test-support"] }
  
 -[target.'cfg(not(any(all(target_os = "windows", target_env = "gnu"), target_os = "freebsd")))'.dependencies]
 +[target.'cfg(not(any(all(target_os = "windows", target_env = "gnu"), target_os = "freebsd", target_os = "linux")))'.dependencies]
@@ -272,7 +272,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
  pub enum Sound {
 --- a/crates/audio/src/audio_pipeline.rs
 +++ b/crates/audio/src/audio_pipeline.rs
-@@ -112,41 +112,6 @@
+@@ -124,41 +124,6 @@
  
          Ok(source)
      }
@@ -1181,7 +1181,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
               _: &terminal_panel::ToggleFocus,
               window: &mut Window,
               cx: &mut Context<Workspace>| {
-@@ -6171,7 +6160,7 @@
+@@ -6177,7 +6166,7 @@
              release_channel::init(Version::new(0, 0, 0), cx);
              command_palette::init(cx);
              editor::init(cx);
