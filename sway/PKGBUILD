@@ -42,7 +42,6 @@ optdepends=(
   'swaylock: Screen locker'
   'waybar: Highly customizable bar'
   'wmenu: Application launcher used in default config'
-  'xorg-xwayland: X11 support'
   'xdg-desktop-portal-gtk: Default xdg-desktop-portal for file picking'
   'xdg-desktop-portal-wlr: xdg-desktop-portal backend'
 )
@@ -55,11 +54,11 @@ backup=(
 )
 install=sway.install
 source=(
-  "${url}/releases/download/${pkgver}-rc1/${_pkgname}-${pkgver}-rc1.tar.gz"
+  "${url}/releases/download/${pkgver}/${_pkgname}-${pkgver}.tar.gz"
   '50-systemd-user.conf'
   'sway-portals.conf'
 )
-sha256sums=('912554cba209aeea32ef6ccbc1636e7942e92f0ea2d9b3e6d49787649e931226'
+sha256sums=('a7b1becc217433c11c6284d36bcea0687b87b77b0ed26a384565292ec321f2b1'
             '670a388b02740f4e70d4e072cfb5ebd130f8fe2ab34cf0921cade87a2459b667'
             'd7c031d0c49c116f503d2ad45471741d2730bbbb6ac945f89c15650f1701ff57')
 
@@ -79,7 +78,7 @@ build() {
     -Dwerror=false
   )
 
-  arch-meson "${_pkgname}-${pkgver}-rc1" build "${_meson_options[@]}"
+  arch-meson "${_pkgname}-${pkgver}" build "${_meson_options[@]}"
 
   meson compile -C build
 }
@@ -90,7 +89,7 @@ check() {
 
 package() {
   DESTDIR="${pkgdir}" meson install -C build
-  install -Dm644 "${_pkgname}-${pkgver}-rc1/LICENSE" -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  install -Dm644 "${_pkgname}-${pkgver}/LICENSE" -t "${pkgdir}/usr/share/licenses/${pkgname}"
 
   install -Dm644 50-systemd-user.conf -t "$pkgdir/etc/sway/config.d/"
   install -Dm644 sway-portals.conf "$pkgdir/usr/share/xdg-desktop-portal/sway-portals.conf"
