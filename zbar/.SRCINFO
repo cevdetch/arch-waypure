@@ -7,6 +7,7 @@ pkgbase = zbar-waypure
 	license = LGPL-2.1-or-later
 	makedepends = docbook-xsl
 	makedepends = glib2-devel
+	makedepends = gtk3
 	makedepends = meson
 	makedepends = python
 	makedepends = xmlto
@@ -19,7 +20,7 @@ pkgbase = zbar-waypure
 	depends = v4l-utils
 	optdepends = gtk3: for zbar-gtk
 	optdepends = python: for zbar python bindings
-	provides = zbar
+	provides = zbar=0.23.95
 	provides = zbar-gtk
 	provides = python-zbar
 	conflicts = zbar

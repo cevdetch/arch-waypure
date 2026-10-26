@@ -21,6 +21,7 @@ depends=(
 makedepends=(
   docbook-xsl
   glib2-devel
+  gtk3
   meson
   python
   xmlto
@@ -29,7 +30,7 @@ optdepends=(
   'gtk3: for zbar-gtk'
   'python: for zbar python bindings'
 )
-provides=("${_pkgname}" 'zbar-gtk' 'python-zbar')
+provides=("${_pkgname}=${pkgver}" 'zbar-gtk' 'python-zbar')
 conflicts=("${_pkgname}" 'zbar-gtk' 'python-zbar')
 replaces=("${_pkgname}" 'zbar-gtk' 'python-zbar')
 source=("${_pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/${pkgver}.tar.gz")
