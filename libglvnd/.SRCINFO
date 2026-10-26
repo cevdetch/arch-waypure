@@ -9,7 +9,7 @@ pkgbase = libglvnd-waypure
 	makedepends = python
 	depends = glibc
 	optdepends = mesa: free OpenGL implementation (EGL, GLES, GL)
-	provides = libglvnd
+	provides = libglvnd=1.7.0
 	provides = libegl
 	provides = libgl
 	provides = libgles
