@@ -10,13 +10,13 @@ arch=('x86_64')
 url="https://github.com/intel/libva"
 license=('MIT')
 depends=('glibc' 'libdrm' 'wayland')
-makedepends=('meson' 'wayland-protocols')
+makedepends=('meson')
 optdepends=(
   'intel-media-driver: backend for Intel GPUs (>= Broadwell)'
   'libva-intel-driver: backend for Intel GPUs (<= Haswell)'
   'libva-mesa-driver: backend for AMD and NVIDIA GPUs'
 )
-provides=("${_pkgname}" 'libva.so' 'libva-drm.so' 'libva-wayland.so')
+provides=("${_pkgname}=${pkgver}" 'libva.so' 'libva-drm.so' 'libva-wayland.so')
 conflicts=("${_pkgname}")
 replaces=("${_pkgname}")
 source=("$url/releases/download/$pkgver/${pkgname%%-*}-$pkgver.tar.bz2")
@@ -40,5 +40,5 @@ build() {
 
 package() {
   DESTDIR="${pkgdir}" meson install -C build
-  install -Dm644 "${_pkgname}-$pkgver/COPYING" -t "$pkgdir/usr/share/licenses/${_pkgname}"
+  install -Dm644 "${_pkgname}-$pkgver/COPYING" -t "$pkgdir/usr/share/licenses/${pkgname}"
 }

@@ -6,14 +6,13 @@ pkgbase = libva-waypure
 	arch = x86_64
 	license = MIT
 	makedepends = meson
-	makedepends = wayland-protocols
 	depends = glibc
 	depends = libdrm
 	depends = wayland
 	optdepends = intel-media-driver: backend for Intel GPUs (>= Broadwell)
 	optdepends = libva-intel-driver: backend for Intel GPUs (<= Haswell)
 	optdepends = libva-mesa-driver: backend for AMD and NVIDIA GPUs
-	provides = libva
+	provides = libva=2.24.1
 	provides = libva.so
 	provides = libva-drm.so
 	provides = libva-wayland.so
