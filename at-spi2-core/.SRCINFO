@@ -6,6 +6,7 @@ pkgbase = at-spi2-core-waypure
 	arch = x86_64
 	license = LGPL-2.1-or-later
 	makedepends = glib2-devel
+	makedepends = libxml2
 	makedepends = meson
 	makedepends = systemd
 	depends = dbus
@@ -13,7 +14,7 @@ pkgbase = at-spi2-core-waypure
 	depends = glibc
 	depends = libgcc
 	depends = systemd-libs
-	provides = at-spi2-core
+	provides = at-spi2-core=2.62.1
 	provides = at-spi2-atk=2.62.1-1
 	provides = atk=2.62.1-1
 	provides = libatk-1.0.so
