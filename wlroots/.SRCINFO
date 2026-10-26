@@ -6,10 +6,10 @@ pkgbase = wlroots0.20-waypure
 	arch = x86_64
 	license = MIT
 	makedepends = glslang
+	makedepends = hwdata
 	makedepends = meson
 	makedepends = systemd
 	makedepends = vulkan-headers
-	makedepends = wayland-protocols
 	depends = glibc
 	depends = lcms2
 	depends = libdisplay-info
@@ -23,7 +23,8 @@ pkgbase = wlroots0.20-waypure
 	depends = systemd-libs
 	depends = vulkan-icd-loader
 	depends = wayland
-	provides = wlroots0.20
+	depends = wayland-protocols>=1.47
+	provides = wlroots0.20=0.20.2
 	provides = libwlroots-0.20.so
 	conflicts = wlroots0.20
 	replaces = wlroots0.20

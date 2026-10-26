@@ -10,9 +10,9 @@ pkgdesc="Modular Wayland compositor library without X"
 arch=('x86_64')
 url="https://gitlab.freedesktop.org/wlroots/wlroots"
 license=('MIT')
-depends=(glibc 'lcms2' 'libdisplay-info' 'libdrm' 'libinput' 'libliftoff' 'libxkbcommon' 'mesa' 'pixman' 'seatd' 'systemd-libs' 'vulkan-icd-loader' 'wayland')
-makedepends=('glslang' 'meson' 'systemd' 'vulkan-headers' 'wayland-protocols')
-provides=("${_pkgname}${_pkgabi}" "libwlroots-${_pkgabi}.so")
+depends=(glibc 'lcms2' 'libdisplay-info' 'libdrm' 'libinput' 'libliftoff' 'libxkbcommon' 'mesa' 'pixman' 'seatd' 'systemd-libs' 'vulkan-icd-loader' 'wayland' 'wayland-protocols>=1.47')
+makedepends=('glslang' 'hwdata' 'meson' 'systemd' 'vulkan-headers')
+provides=("${_pkgname}${_pkgabi}=${pkgver}" "libwlroots-${_pkgabi}.so")
 conflicts=("${_pkgname}${_pkgabi}")
 replaces=("${_pkgname}${_pkgabi}")
 source=("${url}/-/releases/${pkgver}/downloads/${_pkgname}-${pkgver}.tar.gz")
