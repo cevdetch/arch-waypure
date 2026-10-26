@@ -21,9 +21,10 @@ depends=(
   libpng
   zlib
 )
+makedepends=('git')
 checkdepends=('ttf-liberation')
 optdepends=('perl: bdftogd script')
-provides=("${_pkgname}")
+provides=("${_pkgname}=${pkgver}")
 conflicts=("${_pkgname}")
 replaces=("${_pkgname}")
 source=(
@@ -51,12 +52,12 @@ prepare() {
   cd "lib${_pkgname}-${pkgver}"
 
   # Fix heif tests
-  git apply -p1 ../f1a53c082173567b8ad07eaba8fc7ba66457a730.patch
-  git apply -p1 ../21633377174354199c3ea3e4b23f64cfaeacc50a.patch
+  git --work-tree=. apply -p1 ../f1a53c082173567b8ad07eaba8fc7ba66457a730.patch
+  git --work-tree=. apply -p1 ../21633377174354199c3ea3e4b23f64cfaeacc50a.patch
 
-  git apply -p1 ../gd-2.3.0-disable-flaky-tests.patch
-  git apply -p1 ../gd-2.3.3-GD_BICUBIC.patch
-  git apply -p1 ../gd-2.3.3-c23.patch
+  git --work-tree=. apply -p1 ../gd-2.3.0-disable-flaky-tests.patch
+  git --work-tree=. apply -p1 ../gd-2.3.3-GD_BICUBIC.patch
+  git --work-tree=. apply -p1 ../gd-2.3.3-c23.patch
 
   # Remove failing tests
   for f in tests/heif/{heif_read,heif_im2im}.c; do

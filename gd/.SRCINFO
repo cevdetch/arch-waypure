@@ -6,6 +6,7 @@ pkgbase = gd-waypure
 	arch = x86_64
 	license = GD
 	checkdepends = ttf-liberation
+	makedepends = git
 	depends = fontconfig
 	depends = libwebp
 	depends = libavif
@@ -16,7 +17,7 @@ pkgbase = gd-waypure
 	depends = libpng
 	depends = zlib
 	optdepends = perl: bdftogd script
-	provides = gd
+	provides = gd=2.3.3
 	conflicts = gd
 	replaces = gd
 	source = https://github.com/libgd/libgd/releases/download/gd-2.3.3/libgd-2.3.3.tar.gz
