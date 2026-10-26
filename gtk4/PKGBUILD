@@ -55,9 +55,10 @@ makedepends=(
   glib2-devel
   # gobject-introspection # introspection
   hicolor-icon-theme
+  libdrm
   # libsysprof-capture # sysprof
   meson
-  # python-docutils # documentation
+  python-docutils
   # python-gobject # introspection
   sassc
   shaderc # vulkan
@@ -131,7 +132,7 @@ _pick() {
 
 package_gtk4-waypure() {
   optdepends=('evince: Default print preview command')
-  provides=("gtk4" 'libgtk-4.so')
+  provides=("gtk4=${epoch}:${pkgver}" 'libgtk-4.so')
   conflicts=("gtk4")
   replaces=("gtk4")
 
@@ -156,7 +157,7 @@ END
 
 package_gtk-update-icon-cache-waypure() {
   pkgdesc="GTK icon cache updater"
-  provides=("gtk-update-icon-cache")
+  provides=("gtk-update-icon-cache=${epoch}:${pkgver}")
   conflicts=("gtk-update-icon-cache")
   replaces=("gtk-update-icon-cache")
   depends=(

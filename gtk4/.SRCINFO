@@ -9,7 +9,9 @@ pkgbase = gtk4-waypure
 	makedepends = docbook-xsl
 	makedepends = glib2-devel
 	makedepends = hicolor-icon-theme
+	makedepends = libdrm
 	makedepends = meson
+	makedepends = python-docutils
 	makedepends = sassc
 	makedepends = shaderc
 	makedepends = vulkan-headers
@@ -58,7 +60,7 @@ pkgbase = gtk4-waypure
 
 pkgname = gtk4-waypure
 	optdepends = evince: Default print preview command
-	provides = gtk4
+	provides = gtk4=1:4.24.1
 	provides = libgtk-4.so
 	conflicts = gtk4
 	replaces = gtk4
@@ -71,6 +73,6 @@ pkgname = gtk-update-icon-cache-waypure
 	depends = glibc
 	depends = hicolor-icon-theme
 	depends = librsvg
-	provides = gtk-update-icon-cache
+	provides = gtk-update-icon-cache=1:4.24.1
 	conflicts = gtk-update-icon-cache
 	replaces = gtk-update-icon-cache
