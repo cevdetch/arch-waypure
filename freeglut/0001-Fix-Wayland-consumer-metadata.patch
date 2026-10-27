@@ -1,0 +1,30 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -800,7 +800,7 @@
+   ENDIF()
+ ELSE()
+   IF(FREEGLUT_WAYLAND)
+-    SET(PC_LIBS_PRIVATE "-lwayland-client -lwayland-cursor -lwayland-egl -lGL -lxkbcommon -lm")
++    SET(PC_LIBS_PRIVATE "-lwayland-client -lwayland-cursor -lwayland-egl -lEGL -lOpenGL -lxkbcommon -lm")
+   ELSEIF(OGC)
+     SET(PC_LIBS_PRIVATE "-lm")
+   ELSE()
+--- a/cmake/FreeGLUTConfig.cmake.in
++++ b/cmake/FreeGLUTConfig.cmake.in
+@@ -1 +1,16 @@
++if(@FREEGLUT_WAYLAND@ AND NOT @FREEGLUT_GLES@)
++  include(CMakeFindDependencyMacro)
++  find_dependency(OpenGL COMPONENTS EGL OpenGL)
++  find_dependency(PkgConfig)
++  foreach(_freeglut_module wayland-client wayland-cursor wayland-egl xkbcommon)
++    pkg_check_modules(${_freeglut_module} QUIET IMPORTED_TARGET ${_freeglut_module})
++    if(NOT ${_freeglut_module}_FOUND)
++      set(FreeGLUT_FOUND FALSE)
++      set(FreeGLUT_NOT_FOUND_MESSAGE "Missing dependency: ${_freeglut_module}")
++      return()
++    endif()
++  endforeach()
++  unset(_freeglut_module)
++endif()
++
+ include("${CMAKE_CURRENT_LIST_DIR}/FreeGLUTTargets.cmake")

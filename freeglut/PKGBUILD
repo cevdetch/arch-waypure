@@ -9,17 +9,25 @@ pkgdesc="Free OpenGL Utility Toolkit"
 arch=('x86_64')
 url="https://github.com/freeglut/freeglut"
 license=('X11')
-depends=('glibc' 'libglvnd' 'libxkbcommon' 'wayland')
-makedepends=('cmake' 'glu' 'git' 'mesa' 'ninja')
-provides=("${_pkgname}" 'glut')
+depends=('glibc' 'glu' 'libglvnd' 'libxkbcommon' 'wayland')
+makedepends=('cmake' 'git' 'mesa' 'ninja')
+provides=("${_pkgname}=${pkgver}" 'glut')
 conflicts=("${_pkgname}")
 replaces=("${_pkgname}")
-source=("git+${url}.git#commit=61d2fa47ab68283542e64ba644f227a72f6a8ec2")
-sha256sums=('SKIP')
+# This post-3.8.0 commit avoids an implicit GLX dependency in Wayland builds.
+source=("git+${url}.git#commit=61d2fa47ab68283542e64ba644f227a72f6a8ec2"
+        '0001-Fix-Wayland-consumer-metadata.patch')
+sha256sums=('b1c7eb3190e9d5832732fae334de9ea85a25ffff4a82c5310cb439fb84c49995'
+            '570c12fd86214900ff1945c42d7a58805804537aeec66f170f75d331e20087f3')
 
 pkgver() {
   cd "$srcdir/freeglut"
-  git describe --tags --long --dirty | sed 's/^v//;s/-/./g'
+  git describe --tags --long | sed 's/^v//;s/-/./g'
+}
+
+prepare() {
+  cd "${_pkgname}"
+  patch -Np1 -i "${srcdir}/0001-Fix-Wayland-consumer-metadata.patch"
 }
 
 build() {
@@ -39,6 +47,39 @@ build() {
 
   cmake -S "${_pkgname}" "${_cmake_args[@]}"
   cmake --build build
+}
+
+check() {
+  cd build
+  mkdir -p consumer
+  cat > consumer/main.c <<'EOF'
+#include <GL/freeglut.h>
+int main(void) { return glutGet(GLUT_INIT_STATE); }
+EOF
+  cat > consumer/CMakeLists.txt <<'EOF'
+cmake_minimum_required(VERSION 3.22)
+project(FreeGLUTConsumer C)
+find_package(FreeGLUT CONFIG REQUIRED)
+add_executable(consumer main.c)
+target_include_directories(consumer PRIVATE "${FREEGLUT_INCLUDE_DIR}")
+target_link_libraries(consumer PRIVATE FreeGLUT::freeglut)
+EOF
+  cmake -S consumer -B consumer/build -G Ninja \
+    -D "FreeGLUT_DIR=${PWD}/FreeGLUT" \
+    -D "FREEGLUT_INCLUDE_DIR=${srcdir}/${_pkgname}/include"
+  cmake --build consumer/build
+  LD_LIBRARY_PATH="${PWD}/lib" consumer/build/consumer
+
+  local _pkg_flags
+  _pkg_flags=$(PKG_CONFIG_PATH="${PWD}" pkg-config --static --cflags --libs freeglut)
+  case " ${_pkg_flags} " in
+    *' -lGL '*|*' -lGLX '*) return 1 ;;
+  esac
+  local -a _consumer_flags
+  read -r -a _consumer_flags <<< "${_pkg_flags}"
+  cc -I "${srcdir}/${_pkgname}/include" consumer/main.c -L "${PWD}/lib" \
+    "${_consumer_flags[@]}" -o consumer/pkgconfig-consumer
+  LD_LIBRARY_PATH="${PWD}/lib" consumer/pkgconfig-consumer
 }
 
 package() {

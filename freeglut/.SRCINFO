@@ -6,19 +6,21 @@ pkgbase = freeglut-waypure
 	arch = x86_64
 	license = X11
 	makedepends = cmake
-	makedepends = glu
 	makedepends = git
 	makedepends = mesa
 	makedepends = ninja
 	depends = glibc
+	depends = glu
 	depends = libglvnd
 	depends = libxkbcommon
 	depends = wayland
-	provides = freeglut
+	provides = freeglut=3.8.0.17.g61d2fa47
 	provides = glut
 	conflicts = freeglut
 	replaces = freeglut
 	source = git+https://github.com/freeglut/freeglut.git#commit=61d2fa47ab68283542e64ba644f227a72f6a8ec2
-	sha256sums = SKIP
+	source = 0001-Fix-Wayland-consumer-metadata.patch
+	sha256sums = b1c7eb3190e9d5832732fae334de9ea85a25ffff4a82c5310cb439fb84c49995
+	sha256sums = 570c12fd86214900ff1945c42d7a58805804537aeec66f170f75d331e20087f3
 
 pkgname = freeglut-waypure
