@@ -5,18 +5,16 @@ pkgbase = libepoxy-waypure
 	url = https://github.com/anholt/libepoxy
 	arch = x86_64
 	license = MIT
-	makedepends = mesa-libgl
 	makedepends = meson
-	makedepends = systemd
 	depends = glibc
 	depends = libglvnd
-	provides = libepoxy
+	provides = libepoxy=1.5.10
 	provides = libepoxy.so
 	conflicts = libepoxy
 	replaces = libepoxy
 	source = libepoxy-1.5.10.tar.gz::https://github.com/anholt/libepoxy/archive/refs/tags/1.5.10.tar.gz
 	source = libepoxy-1.5.10-libopengl-fallback.patch
 	sha256sums = a7ced37f4102b745ac86d6a70a9da399cc139ff168ba6b8002b4d8d43c900c15
-	sha256sums = a9e639f36676eba5b6896fd8022cbc3def18f2ef5bd380216530f5e8c1a5228c
+	sha256sums = dc3b542d504e32976c23302b8f14207343e3a4fa10950a1065f898b889acfd3d
 
 pkgname = libepoxy-waypure

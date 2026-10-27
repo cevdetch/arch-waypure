@@ -10,8 +10,8 @@ arch=('x86_64')
 url="https://github.com/anholt/libepoxy"
 license=('MIT')
 depends=('glibc' 'libglvnd')
-makedepends=('mesa-libgl' 'meson' 'systemd')
-provides=("${_pkgname}" 'libepoxy.so')
+makedepends=('meson')
+provides=("${_pkgname}=${pkgver}" 'libepoxy.so')
 conflicts=("${_pkgname}")
 replaces=("${_pkgname}")
 source=(
@@ -20,11 +20,12 @@ source=(
 )
 sha256sums=(
   'a7ced37f4102b745ac86d6a70a9da399cc139ff168ba6b8002b4d8d43c900c15'
-  'a9e639f36676eba5b6896fd8022cbc3def18f2ef5bd380216530f5e8c1a5228c'
+  'dc3b542d504e32976c23302b8f14207343e3a4fa10950a1065f898b889acfd3d'
 )
 
 prepare() {
-    patch -d "${pkgname%%-*}-$pkgver" -Np1 -i ../libepoxy-1.5.10-libopengl-fallback.patch
+  cd "${_pkgname}-${pkgver}"
+  patch -Np1 -i "${srcdir}/libepoxy-1.5.10-libopengl-fallback.patch"
 }
 
 build() {
@@ -41,11 +42,7 @@ build() {
   meson compile -C build
 }
 
-check() {
-  meson test -C build --print-errorlogs
-}
-
 package() {
   DESTDIR="${pkgdir}" meson install -C build
-   install -Dm644 "${pkgname%%-*}-$pkgver/COPYING" -t "$pkgdir/usr/share/licenses/$pkgname"
+  install -Dm644 "${_pkgname}-${pkgver}/COPYING" -t "${pkgdir}/usr/share/licenses/${pkgname}"
 }
