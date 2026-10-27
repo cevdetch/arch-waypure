@@ -32,13 +32,13 @@ depends=(
 )
 makedepends=('gtk3' 'gnutls' 'glu' 'freeglut')
 optdepends=('gtk3: needed for gsx')
-provides=("${_pkgname}")
+provides=("${_pkgname}=${pkgver}")
 conflicts=("${_pkgname}" 'ghostpcl' 'ghostxps')
 replaces=("${_pkgname}" 'ghostpcl' 'ghostxps')
 source=(
   "${url}/releases/download/gs${pkgver//./}/${_pkgname}-${pkgver}.tar.gz"
   '2010_add_build_timestamp_setting.patch' # ARCH
-  'https://src.fedoraproject.org/rpms/ghostscript/raw/rawhide/f/0001-Reinstate-pdf2dsc.patch' # FEDORA
+  '0001-Reinstate-pdf2dsc.patch' # FEDORA
 )
 sha256sums=('caf199e3f233f1290b27d0972d636f66c303355f2353309b7bfddf1edda06b3d'
             'ce6ce3cca271d12de97d99e847f47c1fece0be2b663861654baa217857c00339'
@@ -86,8 +86,6 @@ prepare() {
 build() {
   local _make_options=(
     --prefix=/usr
-    --enable-shared
-    --disable-static
 
     # Optional Features:
     # --disable-contrib # include contributed drivers
@@ -95,11 +93,11 @@ build() {
     # --disable-neon #  use neon instrinsics
     --enable-threading # for multithreaded rendering
     --enable-fontconfig # ARCH GENTOO
-    --enable-freetype # ARCH GENTOO
+    # FreeType is required and detected automatically from the system.
     # --disable-dbus # include dbus support
-    # --disable-cups # include CUPS support
+    --enable-cups # PACKAGING
     --enable-openjpeg # ARCH GENTOO
-    # --disable-gtk  #  build the gtk loader
+    --enable-gtk # PACKAGING
     --disable-compile-inits # ARCH GENTOO
     # --disable-hidden-visibility # expose all shared library symbols even those which are not part of its public API
     # --enable-dynamic # Enable dynamically loaded drivers (note: this option is deprecated because it is incompatible with hidden symbols - use --disable-hidden-visibility
@@ -161,8 +159,22 @@ build() {
   export CFLAGS="${CFLAGS} -std=gnu17" # ARCH GENTOO
   export CXXFLAGS="${CXXFLAGS} -std=gnu++17" # ARCH GENTOO
 
+  pkg-config --print-errors --exists gtk+-3.0
   ./configure "${_make_options[@]}"
+  # Upstream selects the shared-library build through this target.
   make so
+}
+
+check() {
+  cd "${_pkgname}-${pkgver}"
+  readelf -d sobin/gsx | grep -q 'Shared library: \[libgtk-3.so.0\]'
+  local _png="${srcdir}/ghostscript-smoke.png"
+  GS_LIB="${PWD}/Resource/Init:${PWD}/lib" LD_LIBRARY_PATH="${PWD}/sobin" \
+    sobin/gsc -q -dNOPAUSE -dBATCH \
+    -sDEVICE=png16m -sOutputFile="${_png}" \
+    -c '<</PageSize [72 72]>> setpagedevice 1 0 0 setrgbcolor 0 0 72 72 rectfill showpage'
+  test -s "${_png}"
+  LD_LIBRARY_PATH="${PWD}/sobin" sobin/gsc -h | grep -qw cups
 }
 
 package() {

@@ -29,7 +29,7 @@ pkgbase = ghostscript-waypure
 	depends = sh
 	depends = zlib
 	optdepends = gtk3: needed for gsx
-	provides = ghostscript
+	provides = ghostscript=10.08.0
 	conflicts = ghostscript
 	conflicts = ghostpcl
 	conflicts = ghostxps
@@ -38,7 +38,7 @@ pkgbase = ghostscript-waypure
 	replaces = ghostxps
 	source = https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs10080/ghostscript-10.08.0.tar.gz
 	source = 2010_add_build_timestamp_setting.patch
-	source = https://src.fedoraproject.org/rpms/ghostscript/raw/rawhide/f/0001-Reinstate-pdf2dsc.patch
+	source = 0001-Reinstate-pdf2dsc.patch
 	sha256sums = caf199e3f233f1290b27d0972d636f66c303355f2353309b7bfddf1edda06b3d
 	sha256sums = ce6ce3cca271d12de97d99e847f47c1fece0be2b663861654baa217857c00339
 	sha256sums = 79a8daa5e456c7c005f8e4180a06217ddedf0936e309a43f4a63d157d6ca43f3
