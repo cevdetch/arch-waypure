@@ -3,7 +3,7 @@
 
 _pkgname=zvbi
 pkgname=${_pkgname}-waypure
-pkgver=0.2.45
+pkgver=0.2.46
 pkgrel=1
 pkgdesc="VBI capture and decoding library"
 arch=('x86_64')
@@ -12,32 +12,36 @@ license=(
   'GPL-2.0-or-later'
   'GPL-2.0-only'
   'LGPL-2.1-or-later'
-  'BSD-2-Clause'
+  # 'BSD-2-Clause' # covers examples, which are not packaged.
   'MIT'
 )
 depends=('glibc' 'libgcc' 'libpng')
 makedepends=('make')
-provides=("${_pkgname}")
+provides=("${_pkgname}=${pkgver}")
 conflicts=("${_pkgname}")
 replaces=("${_pkgname}")
-source=("${url}/archive/refs/tags/v${pkgver}.tar.gz")
-sha256sums=('e6c954fde2a5a635187f19e1ab870a88c1a982012c5f1b33b8f2513e0ab7a50e')
+source=("${_pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('817a26118e2654155ee761cd39414885986a4315fdb6617af5314090ddfffd10')
 
 prepare() {
-  cd "zvbi-${pkgver}"
+  cd "${_pkgname}-${pkgver}"
   NOCONFIGURE=1 ./autogen.sh
 }
 
 build() {
-  cd "zvbi-${pkgver}"
+  cd "${_pkgname}-${pkgver}"
 
   local _make_options=(
     --prefix=/usr
     --sbindir=/usr/bin
-    --without-x
+    --without-x # WAYLAND
     --disable-examples
     --disable-tests
-    --disable-doxygen
+    --without-doxygen
+    # --disable-bktr # [DEFAULT OFF] host_os=linux-gnu
+    # --enable-dvb # [DEFAULT ON] host_os=linux-gnu
+    # --enable-proxy # [DEFAULT ON] host_os=linux-gnu
+    # --enable-v4l # [DEFAULT ON] host_os=linux-gnu
   )
 
   ./configure "${_make_options[@]}"
@@ -46,8 +50,8 @@ build() {
 }
 
 package() {
-  cd "zvbi-${pkgver}"
+  cd "${_pkgname}-${pkgver}"
 
   make DESTDIR="${pkgdir}" install
-  install -Dm 644 COPYING.md -t "${pkgdir}"/usr/share/licenses/zvbi
+  install -Dm 644 COPYING.md -t "${pkgdir}"/usr/share/licenses/${pkgname}
 }
