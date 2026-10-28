@@ -50,7 +50,6 @@ depends=(
 makedepends=(
   chrpath
   ghostscript
-  glu
   ocl-icd
   opencl-headers
 )
@@ -59,10 +58,10 @@ optdepends=(
   'ghostscript: PS/PDF support'
   'ocl-icd: OpenCL support'
 )
-provides=("${_pkgname}" 'libmagick')
+provides=("${_pkgname}=${pkgver}" 'libmagick')
 conflicts=("${_pkgname}")
 replaces=("${_pkgname}")
-options+=(libtool)
+options+=(!emptydirs libtool)
 backup=(etc/ImageMagick-7/{colors,delegates,log,mime,policy,quantization-table,thresholds,type,type-{dejavu,ghostscript}}.xml)
 source=("${_pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/${_pkgver}.tar.gz")
 sha256sums=('f5163a573a1c1bff16358d0a592b2fb168ad0fd3b9dc5ff57dc7820eebc5cf79')
@@ -107,7 +106,6 @@ build() {
     --with-djvu
     --without-dps
     --with-fftw
-    --with-flif
     --without-fpx
     --with-fontconfig
     --with-freetype
@@ -118,10 +116,9 @@ build() {
     --with-jbig
     --with-jpeg
     --with-jxl
-    --with-dmr
+    --without-dmr
     --with-lcms
     --with-lqr
-    --with-ltdl
     --with-lzma
     --with-magick-plus-plus
     --with-openexr
@@ -160,13 +157,7 @@ package() {
   cd "ImageMagick-${_pkgver}"
   make DESTDIR="${pkgdir}" install
 
-  find "${pkgdir}/usr/lib/perl5" -name '*.so' -exec chrpath -d {} +
-
-  # Strip Perl XS shared objects
-  find "${pkgdir}/usr/lib/perl5" -name '*.so' -exec strip -R .comment -R .note {} +
-
-  # Remove empty directory
-  rm -r "${pkgdir}/usr/lib/perl5/5.42/core_perl"
+  find "${pkgdir}/usr/lib/perl5" -name '*.so' -exec chmod u+w {} + -exec chrpath -d {} +
 
   rm "${pkgdir}"/etc/ImageMagick-*/type-{apple,urw-base35,windows}.xml
   rm "$pkgdir"/usr/lib/*.la
