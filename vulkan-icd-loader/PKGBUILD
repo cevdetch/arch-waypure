@@ -11,11 +11,11 @@ url="https://github.com/KhronosGroup/Vulkan-Loader"
 license=('Apache-2.0')
 groups=('vulkan-devel')
 depends=('glibc')
-makedepends=('cmake' 'ninja' 'vulkan-headers' 'wayland')
+makedepends=('cmake' 'ninja' 'vulkan-headers')
 optdepends=(
   'vulkan-driver: packaged vulkan driver'
 )
-provides=("${_pkgname}" 'libvulkan.so')
+provides=("${_pkgname}=${pkgver}" 'libvulkan.so')
 conflicts=("${_pkgname}")
 replaces=("${_pkgname}")
 source=("${url}/archive/refs/tags/vulkan-sdk-${pkgver}.tar.gz")
@@ -28,7 +28,6 @@ build() {
 
     -D CMAKE_INSTALL_PREFIX=/usr
     -D CMAKE_INSTALL_SYSCONFDIR=/etc
-    -D CMAKE_SKIP_INSTALL_RPATH=ON
     -D CMAKE_SKIP_RPATH=ON
 
     -D BUILD_WERROR=ON

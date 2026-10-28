@@ -9,10 +9,9 @@ pkgbase = vulkan-icd-loader-waypure
 	makedepends = cmake
 	makedepends = ninja
 	makedepends = vulkan-headers
-	makedepends = wayland
 	depends = glibc
 	optdepends = vulkan-driver: packaged vulkan driver
-	provides = vulkan-icd-loader
+	provides = vulkan-icd-loader=1.4.363.0
 	provides = libvulkan.so
 	conflicts = vulkan-icd-loader
 	replaces = vulkan-icd-loader
