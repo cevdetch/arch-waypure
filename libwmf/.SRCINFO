@@ -15,12 +15,12 @@ pkgbase = libwmf-waypure
 	depends = libpng
 	depends = zlib
 	optdepends = gdk-pixbuf2: for pixbuf loader
-	provides = libwmf
+	provides = libwmf=0.2.17
 	conflicts = libwmf
 	replaces = libwmf
 	source = https://github.com/caolanm/libwmf/releases/download/v0.2.17/libwmf-0.2.17.tar.gz
-	source = https://codeberg.org/gentoo/gentoo/raw/branch/master/media-libs/libwmf/files/libwmf-0.2.8.4-libpng-1.5.patch
-	source = https://codeberg.org/gentoo/gentoo/raw/branch/master/media-libs/libwmf/files/libwmf-0.2.8.4-pngfix.patch
+	source = libwmf-0.2.8.4-libpng-1.5.patch
+	source = libwmf-0.2.8.4-pngfix.patch
 	sha256sums = 876915024b64edda8d417daf06819d03a0d18adff1fcc2f64182c69274ed0519
 	sha256sums = ffad4b3657725028bf3250f3555275373b800eacd6b6be5512ef3e5f76563181
 	sha256sums = 39a47d2d12720cc98ee4669e44c012e855df5de0dcec0636f1fb12918c2d8006
