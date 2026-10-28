@@ -28,7 +28,7 @@ pkgbase = mpv-waypure
 	depends = zimg
 	depends = zlib
 	optdepends = yt-dlp: for video-sharing websites playback
-	provides = mpv
+	provides = mpv=1:0.41.0
 	provides = libmpv.so
 	conflicts = mpv
 	conflicts = libmpv.so
