@@ -14,18 +14,18 @@ depends=(
   'jsoncpp'
   'libgcc'
   'libstdc++'
-  'vulkan-icd-loader'
 )
 makedepends=(
   'cmake'
-  'mesa'
+  'libglvnd'
   'ninja'
   'python'
   'vulkan-headers'
+  'vulkan-icd-loader'
   'wayland'
   'wayland-protocols'
 )
-provides=("${_pkgname}")
+provides=("${_pkgname}=${pkgver}")
 conflicts=("${_pkgname}")
 replaces=("${_pkgname}")
 source=("${url}/releases/download/release-${pkgver}/OpenXR-SDK-Source-release-${pkgver}.tar.gz")
@@ -63,6 +63,8 @@ build() {
   )
   cmake -S "OpenXR-SDK-Source-release-${pkgver}" "${_cmake_options[@]}"
   cmake --build build
+  # Make generated sources readable in the debug package.
+  chmod -R a+rX build
 }
 
 package() {
