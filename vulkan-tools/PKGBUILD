@@ -14,13 +14,10 @@ depends=('glibc' 'libgcc' 'libstdc++' 'wayland' 'vulkan-icd-loader')
 makedepends=(
   'cmake'
   'ninja'
-  'glslang'
-  'python'
-  'spirv-tools'
   'vulkan-headers'
   'wayland-protocols'
 )
-provides=("${_pkgname}")
+provides=("${_pkgname}=${pkgver}")
 conflicts=("${_pkgname}")
 replaces=("${_pkgname}")
 source=("${url}/archive/refs/tags/vulkan-sdk-${pkgver}.tar.gz")
