@@ -16,6 +16,7 @@ depends=(
   glib2
   glibc
   json-c
+  libcap
   libdrm
   libevdev
   libinput
@@ -24,6 +25,7 @@ depends=(
   pcre2
   pixman
   systemd-libs
+  ttf-font
   wayland
   wlroots0.20
 )
@@ -33,8 +35,9 @@ optdepends=(
   'foot: Terminal emulator used in the default configuration'
   'grim: Screenshot utility used in the default configuration'
   'i3status: Status line generation'
-  # 'libpulse: Volume adjustment tool (pactl) used in the default configuration'
+  'libpulse: Volume adjustment via pactl (use pipewire-pulse)'
   'mako: Lightweight notification daemon'
+  'playerctl: Media player control used in the default configuration'
   'polkit: System privilege control. Required if not using seatd service'
   'swaybg: Wallpaper tool for sway'
   'sway-contrib: Collection of user-contributed scripts for sway'
@@ -45,7 +48,7 @@ optdepends=(
   'xdg-desktop-portal-gtk: Default xdg-desktop-portal for file picking'
   'xdg-desktop-portal-wlr: xdg-desktop-portal backend'
 )
-provides=("${_pkgname}" 'wayland-compositor')
+provides=("${_pkgname}=${epoch}:${pkgver}" 'wayland-compositor')
 conflicts=("${_pkgname}")
 replaces=("${_pkgname}")
 backup=(
@@ -59,7 +62,7 @@ source=(
   'sway-portals.conf'
 )
 sha256sums=('a7b1becc217433c11c6284d36bcea0687b87b77b0ed26a384565292ec321f2b1'
-            '670a388b02740f4e70d4e072cfb5ebd130f8fe2ab34cf0921cade87a2459b667'
+            'ac4b07d168f8cece02e92c1db7ad4f83e27f0e34778cc90f23670b5885a15206'
             'd7c031d0c49c116f503d2ad45471741d2730bbbb6ac945f89c15650f1701ff57')
 
 build() {
@@ -89,6 +92,7 @@ check() {
 
 package() {
   DESTDIR="${pkgdir}" meson install -C build
+  sed -i '\|^output \* bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080\.png fill$|d' "${pkgdir}/etc/sway/config"
   install -Dm644 "${_pkgname}-${pkgver}/LICENSE" -t "${pkgdir}/usr/share/licenses/${pkgname}"
 
   install -Dm644 50-systemd-user.conf -t "$pkgdir/etc/sway/config.d/"
