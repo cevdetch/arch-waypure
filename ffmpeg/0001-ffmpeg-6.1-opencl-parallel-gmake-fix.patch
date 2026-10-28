@@ -1,0 +1,12 @@
+Bug: https://bugs.gentoo.org/782553
+
+--- a/tools/source2c
++++ b/tools/source2c
+@@ -23,6 +23,7 @@
+ 
+ name=$(basename "$input" | sed 's/\./_/')
+ 
++mkdir -p "$(dirname "$output")"
+ cat >$output <<EOF
+ // Generated from $input
+ const char *ff_source_$name =

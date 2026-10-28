@@ -1,0 +1,347 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: cevdetch
+
+_pkgname=ffmpeg
+pkgname=${_pkgname}-waypure
+pkgver=9.0.2
+pkgrel=1
+epoch=2
+pkgdesc="Complete solution to record, convert and stream audio and video"
+arch=('x86_64')
+url="https://github.com/FFmpeg/FFmpeg"
+license=('GPL-3.0-only')
+depends=(
+  aom
+  bzip2
+  cairo
+  dav1d
+  fontconfig
+  freetype2
+  fribidi
+  glib2
+  glibc
+  gmp
+  gnutls
+  gsm
+  harfbuzz
+  lame
+  lcms2
+  libass
+  libavc1394
+  libbluray
+  libbs2b
+  libdrm
+  libdvdnav
+  libdvdread
+  libiec61883
+  libjxl
+  libmodplug
+  libopenmpt
+  libplacebo
+  libpulse
+  libraw1394
+  librsvg
+  libsoxr
+  libssh
+  libtheora
+  libva
+  libvorbis
+  libvpl
+  libvpx
+  libwebp
+  libxml2
+  ocl-icd
+  opencore-amr
+  openjpeg2
+  opus
+  rav1e
+  rubberband
+  sdl2
+  snappy
+  speex
+  srt
+  svt-av1
+  v4l-utils
+  vid.stab
+  vmaf
+  vulkan-icd-loader
+  x264
+  x265
+  xvidcore
+  xz
+  zeromq
+  zimg
+  zlib
+)
+makedepends=(
+  amf-headers
+  avisynthplus
+  clang
+  ffnvcodec-headers
+  frei0r-plugins
+  ladspa
+  nasm
+  opencl-headers
+  shaderc
+  spirv-headers
+  vapoursynth
+  vulkan-headers
+)
+optdepends=(
+  'avisynthplus: AviSynthPlus support'
+  'frei0r-plugins: Frei0r video effects support'
+  'ladspa: LADSPA filters'
+  'nvidia-utils: Nvidia NVDEC/NVENC support'
+
+  'intel-media-driver: for Intel VAAPI support (Broadwell and iGPU newer)'
+  'intel-media-sdk: for Intel Quick Sync Video (Broadwell to Rocket Lake)'
+  'onevpl-intel-gpu: for Intel Quick Sync Video (Tiger Lake and newer)'
+  'intel-compute-runtime: for Intel OpenCL runtime based tonemapping'
+  'libva-intel-driver: for Intel legacy VAAPI support (G45 and HD Graphics family) / (Comet Lake and older)'
+  'libva-mesa-driver: for AMD VAAPI support'
+  'vulkan-radeon: for AMD RADV Vulkan support'
+  'vulkan-intel: for Intel ANV Vulkan support'
+  'vapoursynth: VapourSynth script input'
+)
+provides=(
+  "${_pkgname}=${epoch}:${pkgver}"
+  'libavcodec.so'
+  'libavdevice.so'
+  'libavfilter.so'
+  'libavformat.so'
+  'libavutil.so'
+  'libswresample.so'
+  'libswscale.so'
+)
+conflicts=("${_pkgname}")
+replaces=("${_pkgname}")
+source=(
+  "${url}/archive/refs/tags/n${pkgver}.tar.gz"
+  '0001-Add-av_stream_get_first_dts-for-Chromium.patch' # ARCH
+  '0001-ffmpeg-6.1-opencl-parallel-gmake-fix.patch' # GENTOO
+)
+sha256sums=('6e374ed621e48faa40639307dff48ba6fe574a509977956d2cce9669b7cc27e9'
+            'f865d677f8ad39c79dde69186629cb6468c2b289c4156dbb8dec8e68b0131b40'
+            'be5133af2c1afcb91751fab248110441ffe4987edd5dd346cb2c2c01e0c47e10')
+
+prepare() {
+  cd "FFmpeg-n${pkgver}"
+
+  patch -Np1 -i ../0001-Add-av_stream_get_first_dts-for-Chromium.patch
+  patch -Np1 -i ../0001-ffmpeg-6.1-opencl-parallel-gmake-fix.patch
+}
+
+build() {
+  cd "FFmpeg-n${pkgver}"
+
+  local _make_options=(
+    # Standard options
+    --fatal-warnings
+    --prefix=/usr
+    --disable-rpath
+
+    # Licensing options
+    --enable-gpl
+    --enable-version3
+
+    # Configuration options
+    --disable-static
+    --enable-shared
+    --disable-small
+    --enable-swscale-alpha
+
+    # Program options
+    --enable-ffmpeg
+    --enable-ffplay
+    --enable-ffprobe
+
+    # Documentation options
+    --disable-htmlpages
+    --enable-manpages
+    --disable-podpages
+    --disable-txtpages
+
+    # Component options
+    --enable-avdevice
+    --enable-avcodec
+    --enable-avformat
+    --enable-swresample
+    --enable-swscale
+    --enable-avfilter
+    --enable-pthreads
+    --disable-w32threads
+    --disable-os2threads
+
+    # External library support
+    --disable-alsa # PIPEWIRE
+    --disable-appkit
+    --disable-avfoundation
+    --enable-avisynth
+    --enable-bzlib
+    --enable-cairo
+    --disable-coreimage
+    --enable-frei0r
+    --disable-gcrypt
+    --enable-gmp
+    --enable-gnutls
+    --enable-iconv
+    --enable-ladspa
+    --enable-lcms2
+    --enable-libaom
+    --disable-libaribb24
+    --disable-libaribcaption
+    --enable-libass
+    --enable-libbluray
+    --enable-libbs2b
+    --disable-libcdio
+    --enable-libdav1d
+    --disable-libdavs2
+    --enable-libdvdnav
+    --enable-libdvdread
+    --enable-libfontconfig
+    --enable-libfreetype
+    --enable-libfribidi
+    --enable-libharfbuzz
+    --disable-libgme
+    --enable-libgsm
+    --enable-libiec61883
+    --disable-libjack # PIPEWIRE
+    --enable-libjxl
+    --disable-libklvanc
+    --disable-liblcevc-dec
+    --disable-liblensfun
+    --enable-libmodplug
+    --enable-libmp3lame
+    --disable-libmpeghdec
+    --disable-liboapv
+    --disable-libonnxruntime
+    --enable-libopencore-amrnb
+    --enable-libopencore-amrwb
+    --disable-libopencv
+    --disable-libopenh264
+    --enable-libopenjpeg
+    --enable-libopenmpt
+    --disable-libopenvino
+    --enable-libopus
+    --enable-libplacebo
+    --enable-libpulse # PIPEWIRE
+    --enable-librav1e
+    --disable-librist
+    --enable-librsvg
+    --enable-librubberband
+    --disable-librtmp
+    --disable-libshine
+    --enable-libsnappy
+    --enable-libsoxr
+    --enable-libspeex
+    --enable-libsrt
+    --enable-libssh
+    --enable-libsvtav1
+    --disable-libsvtjpegxs
+    --disable-libtensorflow
+    --enable-libtheora
+    --disable-libtls
+    --disable-libtorch
+    --disable-libuavs3d
+    --enable-libv4l2
+    --enable-libvidstab
+    --enable-libvmaf
+    --enable-libvorbis
+    --enable-libvpx
+    --disable-libvvenc
+    --enable-libwebp
+    --enable-libx264
+    --enable-libx265
+    --disable-libxeve
+    --disable-libxevd
+    --disable-libxavs
+    --disable-libxavs2
+    --disable-libxcb # WAYLAND
+    --enable-libxvid
+    --enable-libxml2
+    --enable-libzimg
+    --enable-libzmq
+    --disable-libzvbi
+    --disable-decklink
+    --disable-mbedtls
+    --disable-mediacodec
+    --disable-mediafoundation
+    --disable-metal
+    --disable-libmysofa
+    --disable-ohcodec
+    --enable-opencl
+    --disable-opengl # MINIMAL
+    --disable-openssl
+    --disable-pocketsphinx
+    --disable-sndio # PIPEWIRE
+    --disable-schannel
+    --enable-sdl2
+    --disable-securetransport
+    --enable-vapoursynth
+    --disable-whisper
+    --disable-xlib # WAYLAND
+    --enable-zlib
+    --enable-amf
+    --disable-audiotoolbox
+    --disable-cuda-nvcc
+    --enable-cuda-llvm
+    --disable-cuvid
+    --disable-d3d11va
+    --disable-d3d12va
+    --disable-dxva2
+    --enable-libdrm
+    --disable-libmfx
+    --enable-libvpl
+    --disable-mmal
+    --enable-nvdec
+    --enable-nvenc
+    --disable-rkmpp
+    --disable-v4l2-m2m
+    --enable-vaapi
+    --disable-vdpau # WAYLAND
+    --disable-videotoolbox
+    --enable-vulkan
+    --disable-vulkan-static
+
+    # Toolchain options
+    --enable-pic
+    --enable-lto
+    --glslc=glslc
+
+    # Developer options (useful when working on FFmpeg itself)
+    --disable-stripping # PACKAGING
+    --disable-memory-poisoning
+    --disable-neon-clobber-test
+    --disable-xmm-clobber-test
+    --disable-valgrind-backtrace
+    --disable-ossfuzz
+    --disable-macos-kperf
+    --disable-large-tests
+    --disable-version-tracking
+  )
+
+  ./configure "${_make_options[@]}"
+
+  make
+}
+
+check() {
+  local _libraries=("${srcdir}/FFmpeg-n${pkgver}"/lib{avcodec,avdevice,avfilter,avformat,avutil,swresample,swscale})
+  local _library_path
+  printf -v _library_path '%s:' "${_libraries[@]}"
+
+  local _zlib_tests=()
+  # WORKAROUND: https://bugs.gentoo.org/965737 (zlib-ng compression is not bit-exact with zlib).
+  if grep -q '^#define ZLIBNG_VERSION ' "$(pkg-config --variable=includedir zlib)/zlib.h"; then
+    _zlib_tests=(
+      lavf-{apng{,.png},gray16be.png,pdv{,-intra},png,rgb48be.png}
+      mov-mp4-frag-flush seek-lavf-pdv
+      vsynth{1,2,3}-{flashsv,mpng,zlib}
+    )
+  fi
+  LD_LIBRARY_PATH="${_library_path%:}" make -C "FFmpeg-n${pkgver}" fate IGNORE_TESTS="${_zlib_tests[*]}"
+}
+
+package() {
+  make DESTDIR="${pkgdir}" -C "FFmpeg-n${pkgver}" install install-man
+}
