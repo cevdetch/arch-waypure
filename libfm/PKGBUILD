@@ -39,27 +39,27 @@ prepare() {
   autoreconf -fiv
 }
 
-
 build() {
-  local _make_options=(
+  local _configure_options=(
     --prefix=/usr
     --sysconfdir=/etc
     --localstatedir=/var
     --with-gtk=3
 
     --enable-gtk-doc
-    --with-gnu-ld
-
-    # --enable_debug=no
+    --enable-exif
   )
 
   cd "${_pkgbase}-${pkgver}"
 
-  ./configure "${_make_options[@]}"
+  ./configure "${_configure_options[@]}"
 
   make
 }
 
+check() {
+  make -C "${_pkgbase}-${pkgver}" test
+}
 
 package_libfm-waypure() {
   pkgdesc="Library for file management"
