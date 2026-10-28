@@ -11,7 +11,7 @@ url="https://gitlab.freedesktop.org/cairo/cairo"
 license=('LGPL-2.1-only OR MPL-1.1')
 depends=('bash' 'fontconfig' 'freetype2' 'glib2' 'glibc' 'libpng' 'pixman' 'zlib')
 makedepends=('meson')
-provides=("${_pkgname}" 'libcairo.so' 'libcairo-gobject.so' 'libcairo-script-interpreter.so')
+provides=("${_pkgname}=${pkgver}" 'libcairo.so' 'libcairo-gobject.so' 'libcairo-script-interpreter.so')
 conflicts=("${_pkgname}")
 replaces=("${_pkgname}")
 source=("$url/-/archive/$pkgver/${pkgname%%-*}-$pkgver.tar.gz")
@@ -19,12 +19,10 @@ sha256sums=('a95ae4f522ef24312af7339563f65e0a03b1ad3d58a46df73d2ef690fe15ae7f')
 
 build() {
   local _meson_options=(
-    -Ddwrite=disabled
     -Dfontconfig=enabled
     -Dfreetype=enabled
 
     -Dpng=enabled
-    -Dquartz=disabled
     -Dtee=disabled
     -Dxcb=disabled
     -Dxlib=disabled
@@ -39,13 +37,15 @@ build() {
     -Dglib=enabled
     -Dspectre=disabled
     -Dsymbol-lookup=disabled
-
-    -Dgtk_doc=false
   )
 
   arch-meson "${_pkgname}-${pkgver}" build "${_meson_options[@]}"
 
   meson compile -C build
+}
+
+check() {
+  meson test -C build --print-errorlogs
 }
 
 package() {
