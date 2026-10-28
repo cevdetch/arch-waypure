@@ -7,8 +7,6 @@ pkgbase = xdg-desktop-portal-gtk-waypure
 	license = LGPL-2.0-or-later
 	makedepends = glib2-devel
 	makedepends = meson
-	makedepends = python
-	makedepends = python-packaging
 	depends = fontconfig
 	depends = gdk-pixbuf2
 	depends = glib2
@@ -18,7 +16,7 @@ pkgbase = xdg-desktop-portal-gtk-waypure
 	depends = libgcc
 	depends = xdg-desktop-portal
 	optdepends = evince: Print preview
-	provides = xdg-desktop-portal-gtk
+	provides = xdg-desktop-portal-gtk=1.15.3
 	provides = xdg-desktop-portal-impl
 	conflicts = xdg-desktop-portal-gtk
 	replaces = xdg-desktop-portal-gtk
