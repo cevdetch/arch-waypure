@@ -1,0 +1,118 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: David Runge <dvzrv@archlinux.org>
+
+_pkgname=fluidsynth
+_gcem=012ae73c6d0a2cb09ffe86475f5c6fba3926e200
+_basics=012d2be17b0eb6839628f8c73687c4ccccc1bb01
+pkgname=${_pkgname}-waypure
+pkgver=2.6.1
+pkgrel=1
+pkgdesc="A real-time software synthesizer based on the SoundFont 2 specifications"
+arch=('x86_64')
+url="https://www.fluidsynth.org/"
+license=('LGPL-2.1-or-later' 'Apache-2.0' 'MIT')
+groups=('pro-audio')
+depends=(
+  alsa-lib
+  dbus
+  glibc
+  libgcc
+  libgomp
+  libpipewire
+  libsndfile
+  libstdc++
+  readline
+  sdl3
+  systemd-libs
+)
+makedepends=(cmake ninja)
+provides=("${_pkgname}=${pkgver}" 'libfluidsynth.so' 'soundfont-synthesizer')
+conflicts=("${_pkgname}")
+backup=("etc/conf.d/${_pkgname}")
+source=(
+  "${_pkgname}-${pkgver}.tar.gz::https://github.com/FluidSynth/fluidsynth/archive/v${pkgver}.tar.gz"
+  "gcem-${_gcem}.tar.gz::https://github.com/kthohr/gcem/archive/${_gcem}.tar.gz"
+  "signalsmith-basics-${_basics}.tar.gz::https://github.com/Signalsmith-Audio/basics/archive/${_basics}.tar.gz"
+  "signalsmith-linear-0.3.1.tar.gz::https://github.com/Signalsmith-Audio/linear/archive/refs/tags/0.3.1.tar.gz"
+  "signalsmith-dsp-1.7.1.tar.gz::https://github.com/Signalsmith-Audio/dsp/archive/refs/tags/v1.7.1.tar.gz"
+  "signalsmith-hilbert-1.0.0.tar.gz::https://github.com/Signalsmith-Audio/hilbert-iir/archive/refs/tags/1.0.0.tar.gz"
+)
+sha256sums=(
+  '3d258a3bf97cc20c59eeebfe62c2432fae88adda74d3ad098681c76e0ebf446b'
+  '34ab0ee87a9eb26d3087fa9b49c2572ea8ee03db0c9705b83648301a3a3fc172'
+  '27af16f00c47abb498eb54bcbe52f6701bf970331f7d2e65731cf5264b202441'
+  'b294471f1306baa4d968b230a8836924680e9ca068a667f4659259d66edbe9bc'
+  '7f679d0751f61079edeaefc6c68b27f5f70a2bc9a4b97b2b02ebf59b7573b359'
+  '01f811fb0945edd5f146e493251672ab2bff03902a88e8c0574dc6c441e3d0b5'
+)
+
+prepare() {
+  cd "${_pkgname}-${pkgver}"
+
+  cp -a "../gcem-${_gcem}/." gcem/
+  cp -a "../basics-${_basics}/." signalsmith-audio-basics/
+
+  sed -i \
+    -e 's/pipewire.service pulseaudio.service/pipewire.service/g' \
+    -e 's|/fluidsynth -is |/fluidsynth -a pipewire -is |' \
+    fluidsynth.service.in
+  sed -i 's/-a alsa /-a pipewire /' fluidsynth.conf.in
+}
+
+build() {
+  local _cmake_options=(
+    -DCMAKE_BUILD_TYPE=None
+    -DCMAKE_INSTALL_PREFIX=/usr
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DCMAKE_DISABLE_FIND_PACKAGE_Doxygen=ON
+    -DCMAKE_DISABLE_FIND_PACKAGE_Git=ON
+    -DCMAKE_REQUIRE_FIND_PACKAGE_PipeWire=ON
+    -DFLUID_DAEMON_ENV_FILE=/etc/conf.d/fluidsynth
+    -DGCEM_INCLUDE_DIR="${srcdir}/${_pkgname}-${pkgver}/gcem/include"
+    -DFETCHCONTENT_FULLY_DISCONNECTED=ON
+    -D "FETCHCONTENT_SOURCE_DIR_SIGNALSMITH-LINEAR=${srcdir}/linear-0.3.1"
+    -D "FETCHCONTENT_SOURCE_DIR_SIGNALSMITH-DSP=${srcdir}/dsp-1.7.1"
+    -D "FETCHCONTENT_SOURCE_DIR_SIGNALSMITH-HILBERT=${srcdir}/hilbert-iir-1.0.0"
+    -Denable-alsa=ON
+    -Denable-aufile=ON
+    -Denable-dbus=ON
+    -Denable-jack=OFF
+    -Denable-ladspa=OFF
+    -Denable-libsndfile=ON
+    -Denable-midishare=OFF
+    -Denable-native-dls=ON
+    -Denable-network=ON
+    -Denable-openmp=ON
+    -Denable-oss=OFF
+    -Denable-pipewire=ON
+    -Denable-portaudio=OFF
+    -Denable-pulseaudio=OFF
+    -Denable-readline=ON
+    -Denable-sdl3=ON
+    -Denable-signalsmith=ON
+    -Denable-systemd=ON
+    -Denable-threads=ON
+  )
+
+  cmake -S "${_pkgname}-${pkgver}" -B build -G Ninja "${_cmake_options[@]}"
+  cmake --build build --parallel "${NPROC:-$(nproc)}"
+}
+
+check() {
+  CTEST_PARALLEL_LEVEL="${NPROC:-$(nproc)}" \
+    cmake --build build --target check --parallel "${NPROC:-$(nproc)}"
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+
+  install -Dm644 build/fluidsynth.service -t "${pkgdir}/usr/lib/systemd/user/"
+  install -Dm644 build/fluidsynth.conf "${pkgdir}/etc/conf.d/fluidsynth"
+  install -Dm644 "${_pkgname}-${pkgver}/"{AUTHORS,CONTRIBUTING.md,README.md,THANKS,TODO} \
+    -t "${pkgdir}/usr/share/doc/${_pkgname}/"
+  install -Dm644 "gcem-${_gcem}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/GCEM-LICENSE"
+  install -Dm644 "basics-${_basics}/LICENSE.txt" "${pkgdir}/usr/share/licenses/${pkgname}/Signalsmith-basics-LICENSE"
+  install -Dm644 linear-0.3.1/LICENSE.txt "${pkgdir}/usr/share/licenses/${pkgname}/Signalsmith-linear-LICENSE"
+  install -Dm644 dsp-1.7.1/LICENSE.txt "${pkgdir}/usr/share/licenses/${pkgname}/Signalsmith-dsp-LICENSE"
+  install -Dm644 hilbert-iir-1.0.0/LICENSE.txt "${pkgdir}/usr/share/licenses/${pkgname}/Signalsmith-hilbert-LICENSE"
+}
