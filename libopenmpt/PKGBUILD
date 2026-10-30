@@ -1,0 +1,61 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: David Runge <dvzrv@archlinux.org>
+
+_pkgname=libopenmpt
+pkgname=${_pkgname}-waypure
+pkgver=0.8.9
+pkgrel=1
+pkgdesc="A library to render tracker music to a PCM audio stream"
+arch=('x86_64')
+url="https://lib.openmpt.org/libopenmpt/"
+license=('BSD-3-Clause')
+depends=(
+  glibc
+  libgcc
+  libogg
+  libstdc++
+  libvorbis
+  mpg123
+  zlib
+)
+provides=("${_pkgname}=${pkgver}" 'libopenmpt.so')
+conflicts=("${_pkgname}")
+source=("${_pkgname}-${pkgver}.tar.gz::https://lib.openmpt.org/files/libopenmpt/src/${_pkgname}-${pkgver}+release.autotools.tar.gz")
+sha256sums=('d7ce84fd05d686c4bcf66af40eae857afa371442db60eeda3f874bd6cf6fc318')
+
+build() {
+  cd "${_pkgname}-${pkgver}+release.autotools"
+
+  local _configure_options=(
+    --prefix=/usr
+    --enable-shared
+    --disable-static
+    --disable-openmpt123
+    --disable-examples
+    --enable-tests
+    --disable-doxygen-doc
+    --with-zlib
+    --with-mpg123
+    --with-ogg
+    --with-vorbis
+    --with-vorbisfile
+    --without-pulseaudio
+    --without-portaudio
+    --without-portaudiocpp
+    --without-sdl2
+  )
+
+  ./configure "${_configure_options[@]}"
+  make
+}
+
+check() {
+  cd "${_pkgname}-${pkgver}+release.autotools"
+  make -k check
+}
+
+package() {
+  cd "${_pkgname}-${pkgver}+release.autotools"
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}/"
+}
