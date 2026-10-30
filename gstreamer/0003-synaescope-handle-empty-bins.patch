@@ -1,0 +1,79 @@
+Subject: [PATCH] synaescope: handle silent FFT bins and bound pixel coordinates
+
+A zero-energy bin divides by zero when computing clarity and x. The resulting
+non-finite conversion can index outside the video buffer. Skip empty bins and
+keep the rightmost finite coordinate within the frame. Preserve the existing
+visualizer test and add explicit silence coverage.
+
+--- a/subprojects/gst-plugins-bad/gst/audiovisualizers/gstsynaescope.c
++++ b/subprojects/gst-plugins-bad/gst/audiovisualizers/gstsynaescope.c
+@@ -265,13 +265,16 @@
+     l = sqrt (ll);
+     rr = (frl - fil) * (frl - fil) + (frr + fir) * (frr + fir);
+     r = sqrt (rr);
++    if (G_UNLIKELY (ll + rr == 0.0))
++      continue;
++
+     /* out-of-phase'ness for this frequency component */
+     clarity = (gint) (
+         ((frl + fil) * (frl - fil) + (frr + fir) * (frr - fir)) /
+         (ll + rr) * 256);
+     fc = r + l;
+ 
+-    x = (guint) (r * w / fc);
++    x = MIN ((guint) (r * w / fc), w - 1);
+     /* the brightness scaling factor was picked by experimenting */
+     br = b * fc * 0.01;
+ 
+--- a/subprojects/gst-plugins-bad/tests/check/elements/audiovisualizer.c
++++ b/subprojects/gst-plugins-bad/tests/check/elements/audiovisualizer.c
+@@ -43,7 +43,7 @@
+ }
+ 
+ static void
+-test_element (const gchar * element)
++test_element (const gchar * element, const gchar * wave)
+ {
+   GstElement *pipeline;
+   GstBus *bus;
+@@ -53,8 +53,8 @@
+ 
+   pipe_str =
+       g_strdup_printf
+-      ("audiotestsrc num-buffers=20 ! audio/x-raw,format=" GST_AUDIO_NE (S16)
+-      ",channels=2 ! %s ! fakesink", element);
++      ("audiotestsrc wave=%s num-buffers=20 ! audio/x-raw,format=" GST_AUDIO_NE (S16)
++      ",channels=2 ! %s ! fakesink", wave, element);
+ 
+   pipeline = gst_parse_launch (pipe_str, &error);
+   fail_unless (pipeline != NULL, "Could not create pipeline: %s",
+@@ -83,10 +83,17 @@
+ {
+   /* Simple pipeline tests to see if these elements run at all.
+    * Will help catch breakages like https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6800. */
+-  test_element ("wavescope");
+-  test_element ("spacescope");
+-  test_element ("spectrascope");
+-  test_element ("synaescope");
++  test_element ("wavescope", "sine");
++  test_element ("spacescope", "sine");
++  test_element ("spectrascope", "sine");
++  test_element ("synaescope", "sine");
++}
++
++GST_END_TEST;
++
++GST_START_TEST (test_synaescope_silence)
++{
++  test_element ("synaescope", "silence");
+ }
+ 
+ GST_END_TEST;
+@@ -100,6 +107,7 @@
+   suite_add_tcase (s, tc_chain);
+ #ifndef GST_DISABLE_PARSE
+   tcase_add_test (tc_chain, test_simple_pipelines);
++  tcase_add_test (tc_chain, test_synaescope_silence);
+ #endif
+ 
+   return s;
