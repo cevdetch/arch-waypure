@@ -1,0 +1,199 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: cevdetch
+
+_pkgname=qt6-base
+pkgname=${_pkgname}-waypure
+pkgver=6.12.0
+pkgrel=1
+pkgdesc="A cross-platform application and UI framework"
+arch=('x86_64')
+url="https://github.com/qt/qtbase"
+license=('GPL-3.0-only'
+         'LGPL-3.0-only'
+         'LicenseRef-Qt-Commercial'
+         'GPL-3.0-only WITH Qt-GPL-exception-1.0')
+groups=('qt6')
+depends=('brotli'
+         'dbus'
+         'double-conversion'
+         'fontconfig'
+         'freetype2'
+         'glib2'
+         'glibc'
+         'harfbuzz'
+         'icu'
+         'krb5'
+         'libb2'
+         'libcups'
+         'libdrm'
+         'libgcc'
+         'libglvnd'
+         'libinput'
+         'libjpeg-turbo'
+         'libpng'
+         'libproxy'
+         'libstdc++'
+         'liburing'
+         'libxkbcommon'
+         'md4c'
+         'mesa'
+         'openssl'
+         'pcre2'
+         'qt6-translations'
+         'shared-mime-info'
+         'sqlite'
+         'systemd-libs'
+         'wayland'
+         'xdg-utils'
+         'zlib'
+         'zstd')
+makedepends=('cmake'
+             'cups'
+             'gtk3'
+             'libfbclient'
+             'mariadb-libs'
+             'ninja'
+             'postgresql'
+             'unixodbc'
+             'vulkan-headers')
+checkdepends=('ttf-liberation')
+optdepends=('freetds: SQL Server access through the ODBC driver'
+            'gdk-pixbuf2: GTK platform plugin'
+            'gtk3: GTK platform plugin'
+            'libfbclient: Firebird/iBase driver'
+            'mariadb-libs: MariaDB driver'
+            'pango: GTK platform plugin'
+            'perl: for syncqt'
+            'python: Qt development helper scripts'
+            'python-license-expression: CycloneDX SBOM generation'
+            'postgresql-libs: PostgreSQL driver'
+            'unixodbc: ODBC driver')
+provides=("${_pkgname}=${pkgver}")
+conflicts=("${_pkgname}")
+source=("qtbase-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz"
+        'qt6-base-cflags.patch'
+        'qt6-base-nostrip.patch'
+        'qt6-base-md4c.patch'
+        'qt6-base-tab-scroll.patch')
+sha256sums=('dff6570582c272cbe744d2e460700318262af505460f4215276459970ae31b46'
+            '5411edbe215c24b30448fac69bd0ba7c882f545e8cf05027b2b6e2227abc5e78'
+            '4b93f6a79039e676a56f9d6990a324a64a36f143916065973ded89adc621e094'
+            'f733f495186252d81409cba7a86b554cece3f8ccd570832834ae3be9ed6cb7b6'
+            '4661b7c7f62a27314cf04f3f4c37e0197301d4c033949f97da37f3e9e44f8328')
+
+prepare() {
+  patch --batch --forward -d "qtbase-${pkgver}" -p1 < qt6-base-cflags.patch
+  patch --batch --forward -d "qtbase-${pkgver}" -p1 < qt6-base-nostrip.patch
+  patch --batch --forward -d "qtbase-${pkgver}" -p1 < qt6-base-md4c.patch
+  patch --batch --forward -d "qtbase-${pkgver}" -p1 < qt6-base-tab-scroll.patch
+}
+
+build() {
+  local _cmake_options=(
+    -B build -G Ninja
+    -DCMAKE_BUILD_TYPE=None
+    -DCMAKE_INSTALL_PREFIX=/usr
+    -DBUILD_WITH_PCH=OFF
+    -DINSTALL_ARCHDATADIR=lib/qt6
+    -DINSTALL_BINDIR=lib/qt6/bin
+    -DINSTALL_DATADIR=share/qt6
+    -DINSTALL_DOCDIR=share/doc/qt6
+    -DINSTALL_EXAMPLESDIR=share/doc/qt6/examples
+    -DINSTALL_INCLUDEDIR=include/qt6
+    -DINSTALL_LIBEXECDIR=lib/qt6
+    -DINSTALL_MKSPECSDIR=lib/qt6/mkspecs
+    -DINSTALL_PUBLICBINDIR=bin
+    -DFEATURE_force_system_libs=ON
+    -DFEATURE_relocatable=OFF
+    -DFEATURE_openssl_linked=ON
+    -DFEATURE_journald=ON
+    -DFEATURE_jemalloc=OFF
+    -DFEATURE_androiddeployqt=OFF
+    -DFEATURE_testlib=ON
+
+    # Makepkg supplies the compiler and linker hardening flags.
+    -DFEATURE_glibc_fortify_source=OFF
+    -DFEATURE_intelcet=OFF
+    -DFEATURE_libcpp_hardening=OFF
+    -DFEATURE_libstdcpp_assertions=OFF
+    -DFEATURE_relro_now_linker=OFF
+    -DFEATURE_stack_clash_protection=OFF
+    -DFEATURE_stack_protector=OFF
+    -DFEATURE_trivial_auto_var_init_pattern=OFF
+    -DQT_INTERNAL_AVOID_OVERRIDING_SYNCQT_CONFIG=ON
+
+    -DFEATURE_xcb=OFF
+    -DFEATURE_xkbcommon_x11=OFF
+    -DFEATURE_xlib=OFF
+    -DFEATURE_xcb_xlib=OFF
+    -DFEATURE_egl_x11=OFF
+    -DCMAKE_DISABLE_FIND_PACKAGE_X11=ON
+    -DCMAKE_DISABLE_FIND_PACKAGE_XCB=ON
+    -DCMAKE_DISABLE_FIND_PACKAGE_X11_XCB=ON
+    -DCMAKE_DISABLE_FIND_PACKAGE_XKB_COMMON_X11=ON
+    -DFEATURE_eglfs=OFF
+    -DFEATURE_linuxfb=OFF
+    -DFEATURE_directfb=OFF
+    -DFEATURE_vkkhrdisplay=OFF
+    -DFEATURE_vnc=OFF
+    -DFEATURE_evdev=OFF
+    -DFEATURE_mtdev=OFF
+    -DFEATURE_tslib=OFF
+    -DFEATURE_libinput=ON
+    -DFEATURE_graphicsframecapture=OFF
+    -DFEATURE_vulkan=ON
+    -DFEATURE_wayland=ON
+    -DFEATURE_wayland_client_wl_shell=OFF
+    -DFEATURE_wayland_client_xdg_shell=ON
+    -DQT_QPA_DEFAULT_PLATFORM=wayland
+    -DQT_QPA_PLATFORMS=wayland
+    -DFEATURE_widgets=ON
+    -DINPUT_opengl=desktop
+    -DFEATURE_egl=ON
+    -DFEATURE_gtk3=ON
+    -DFEATURE_cups=ON
+    -DFEATURE_libproxy=ON
+
+    -DFEATURE_sql_db2=OFF
+    -DFEATURE_sql_oci=OFF
+    -DFEATURE_sql_mimer=OFF
+    -DFEATURE_sql_ibase=ON
+    -DFEATURE_sql_mysql=ON
+    -DFEATURE_sql_odbc=ON
+    -DFEATURE_sql_psql=ON
+    -DFEATURE_sql_sqlite=ON
+    -DFEATURE_system_sqlite=ON
+    -DFEATURE_no_direct_extern_access=ON
+    -DFEATURE_mimetype_database=OFF
+    -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
+    -DCMAKE_MESSAGE_LOG_LEVEL=STATUS
+
+    -DQT_BUILD_TESTS=ON
+    -DQT_BUILD_TESTS_BY_DEFAULT=OFF
+    -DQT_BUILD_BENCHMARKS=OFF
+    -DQT_BUILD_MANUAL_TESTS=OFF
+    -DFEATURE_test_squish=OFF
+    -DQT_SKIP_DOCKER_COMPOSE=ON
+  )
+  cmake -S "qtbase-${pkgver}" "${_cmake_options[@]}"
+  cmake --build build --parallel "${NPROC:-$(nproc)}"
+}
+
+check() (
+  export LD_LIBRARY_PATH="${srcdir}/build/lib"
+  export QT_PLUGIN_PATH="${srcdir}/build/lib/qt6/plugins"
+  export QT_QPA_PLATFORM=offscreen
+  unset DISPLAY WAYLAND_DISPLAY
+
+  cmake --build build --parallel "${NPROC:-$(nproc)}" --target tst_qsqlquery tst_qsqlrecord \
+    tst_qtextmarkdownimporter tst_qtabbar tst_seatv7
+  ctest --test-dir build --output-on-failure --no-tests=error --timeout 180 \
+    -R '^(tst_qsqlquery|tst_qsqlrecord|tst_qtextmarkdownimporter|tst_seatv7|RunCMake\.ConfigVersionOverride)$'
+  build/tests/auto/widgets/widgets/qtabbar/tst_qtabbar \
+    mouseWheel kineticWheel highResolutionWheel
+)
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+  install -Dm644 "qtbase-${pkgver}/LICENSES/"* -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
