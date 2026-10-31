@@ -196,4 +196,5 @@ check() (
 package() {
   DESTDIR="${pkgdir}" cmake --install build
   install -Dm644 "qtbase-${pkgver}/LICENSES/"* -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  ln -s "${pkgname}" "${pkgdir}/usr/share/licenses/${_pkgname}"
 }
