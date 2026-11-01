@@ -1,0 +1,34 @@
+pkgbase = qt6-declarative-waypure
+	pkgdesc = Classes for QML and JavaScript languages
+	pkgver = 6.12.0
+	pkgrel = 1
+	url = https://github.com/qt/qtdeclarative
+	arch = x86_64
+	groups = qt6
+	license = GPL-3.0-only
+	license = LGPL-3.0-only
+	license = LicenseRef-Qt-Commercial
+	license = GPL-3.0-only WITH Qt-GPL-exception-1.0
+	checkdepends = ttf-liberation
+	makedepends = cmake
+	makedepends = ninja
+	makedepends = python
+	makedepends = qt6-languageserver
+	makedepends = qt6-shadertools
+	makedepends = qt6-svg
+	makedepends = vulkan-headers
+	depends = glibc
+	depends = libgcc
+	depends = libstdc++
+	depends = qt6-base
+	optdepends = qt6-svg: for QtQuickVectorImage and svgtoqml
+	provides = qt6-declarative=6.12.0
+	conflicts = qt6-declarative
+	source = qtdeclarative-6.12.0.tar.gz::https://github.com/qt/qtdeclarative/archive/refs/tags/v6.12.0.tar.gz
+	source = qt6-declarative-qml-multiengine.patch
+	source = qt6-declarative-pixmap-teardown.patch
+	sha256sums = 0b71aa358703de8217177dbb620c86af9e9804482e607bb2cadbf116a65bd9c6
+	sha256sums = a7e960661d40983244d8837df422e568ac569e1a7a93aceffa78582df5cdd12c
+	sha256sums = a16c9c7c461cec2f5f1f7933a06753f53d3117867938fd8c809b7cab5bfc8630
+
+pkgname = qt6-declarative-waypure

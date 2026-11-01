@@ -1,0 +1,93 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: cevdetch
+
+_pkgname=qt6-declarative
+pkgname=${_pkgname}-waypure
+pkgver=6.12.0
+pkgrel=1
+pkgdesc="Classes for QML and JavaScript languages"
+arch=('x86_64')
+url="https://github.com/qt/qtdeclarative"
+license=('GPL-3.0-only'
+         'LGPL-3.0-only'
+         'LicenseRef-Qt-Commercial'
+         'GPL-3.0-only WITH Qt-GPL-exception-1.0')
+groups=('qt6')
+depends=('glibc'
+         'libgcc'
+         'libstdc++'
+         'qt6-base')
+makedepends=('cmake'
+             'ninja'
+             'python'
+             'qt6-languageserver'
+             'qt6-shadertools'
+             'qt6-svg'
+             'vulkan-headers')
+checkdepends=('ttf-liberation')
+optdepends=('qt6-svg: for QtQuickVectorImage and svgtoqml')
+provides=("${_pkgname}=${pkgver}")
+conflicts=("${_pkgname}")
+source=("qtdeclarative-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz"
+        'qt6-declarative-qml-multiengine.patch'
+        'qt6-declarative-pixmap-teardown.patch')
+sha256sums=('0b71aa358703de8217177dbb620c86af9e9804482e607bb2cadbf116a65bd9c6'
+            'a7e960661d40983244d8837df422e568ac569e1a7a93aceffa78582df5cdd12c'
+            'a16c9c7c461cec2f5f1f7933a06753f53d3117867938fd8c809b7cab5bfc8630')
+
+prepare() {
+  patch --batch --forward -d "qtdeclarative-${pkgver}" -p1 < qt6-declarative-qml-multiengine.patch
+  patch --batch --forward -d "qtdeclarative-${pkgver}" -p1 < qt6-declarative-pixmap-teardown.patch
+}
+
+build() {
+  local _cmake_options=(
+    -B build -G Ninja
+    -DCMAKE_BUILD_TYPE=None
+    -DCMAKE_INSTALL_PREFIX=/usr
+    -DCMAKE_MESSAGE_LOG_LEVEL=STATUS
+    "-DCMAKE_CXX_FLAGS=${CXXFLAGS} -ffat-lto-objects"
+    -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
+    -DBUILD_WITH_PCH=OFF
+    -DFEATURE_qml_jit=ON
+    -DFEATURE_qml_network=ON
+    -DFEATURE_qml_ssl=ON
+    -DFEATURE_qml_debug=ON
+    -DFEATURE_qml_labs=ON
+    -DFEATURE_quick_vectorimage=ON
+    -DFEATURE_quick_dialogs=ON
+    -DFEATURE_quick_shadereffect=ON
+    -DFEATURE_quickcontrols2_basic=ON
+    -DFEATURE_quickcontrols2_fusion=ON
+    -DFEATURE_quickcontrols2_imagine=ON
+    -DFEATURE_quickcontrols2_material=ON
+    -DFEATURE_quickcontrols2_universal=ON
+    -DFEATURE_quickcontrols2_fluentwinui3=ON
+    -DFEATURE_quickcontrols2_stylekit=ON
+    -DQT_BUILD_EXAMPLES=OFF
+    -DQT_BUILD_TESTS=ON
+    -DQT_BUILD_TESTS_BY_DEFAULT=OFF
+    -DQT_BUILD_BENCHMARKS=OFF
+    -DQT_BUILD_MANUAL_TESTS=OFF
+  )
+  cmake -S "qtdeclarative-${pkgver}" "${_cmake_options[@]}"
+  cmake --build build --parallel "${NPROC:-$(nproc)}"
+}
+
+check() (
+  export LD_LIBRARY_PATH="${srcdir}/build/lib"
+  export QML_IMPORT_PATH="${srcdir}/build/lib/qt6/qml"
+  export QT_QPA_PLATFORM=offscreen
+  export QT_QUICK_BACKEND=software
+  unset DISPLAY WAYLAND_DISPLAY
+
+  cmake --build build --parallel "${NPROC:-$(nproc)}" --target tst_qqmlengine tst_qquickstyle
+  ctest --test-dir build --output-on-failure --no-tests=error --timeout 180 \
+    -R '^(tst_qqmlengine|tst_qquickstyle)$'
+)
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+  install -Dm644 "qtdeclarative-${pkgver}/LICENSES/"* -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  ln -s "${pkgname}" "${pkgdir}/usr/share/licenses/${_pkgname}"
+}
