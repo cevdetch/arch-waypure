@@ -1,0 +1,58 @@
+pkgbase = qt6-multimedia-waypure
+	pkgdesc = Classes for audio, video, radio and camera functionality
+	pkgver = 6.12.0
+	pkgrel = 1
+	url = https://github.com/qt/qtmultimedia
+	arch = x86_64
+	groups = qt6
+	license = GPL-3.0-only
+	license = LGPL-3.0-only
+	license = LicenseRef-Qt-Commercial
+	license = GPL-3.0-only WITH Qt-GPL-exception-1.0
+	makedepends = cmake
+	makedepends = ffmpeg
+	makedepends = libglvnd
+	makedepends = libva
+	makedepends = ninja
+	makedepends = qt6-declarative
+	makedepends = qt6-shadertools
+	makedepends = vulkan-headers
+	depends = glibc
+	depends = libgcc
+	depends = libstdc++
+	depends = libpipewire
+	depends = qt6-base
+	source = qtmultimedia-6.12.0.tar.gz::https://github.com/qt/qtmultimedia/archive/refs/tags/v6.12.0.tar.gz
+	sha256sums = 896543478b9dcdc1811e2960f74d926572cf5d97ce9ad7a53b6ea335cafe8561
+
+pkgname = qt6-multimedia-waypure
+	depends = glibc
+	depends = libgcc
+	depends = libstdc++
+	depends = libpipewire
+	depends = qt6-base
+	depends = qt6-multimedia-backend
+	optdepends = qt6-declarative: QML bindings
+	provides = qt6-multimedia=6.12.0
+	conflicts = qt6-multimedia
+
+pkgname = qt6-multimedia-ffmpeg-waypure
+	pkgdesc = FFmpeg backend for Qt Multimedia
+	groups = 
+	license = GPL-3.0-only
+	license = LGPL-3.0-only
+	license = LicenseRef-Qt-Commercial
+	license = GPL-3.0-only WITH Qt-GPL-exception-1.0
+	license = MIT
+	depends = ffmpeg
+	depends = glibc
+	depends = libgcc
+	depends = libglvnd
+	depends = libstdc++
+	depends = libva
+	depends = qt6-base
+	depends = qt6-declarative
+	depends = qt6-multimedia-waypure=6.12.0-1
+	provides = qt6-multimedia-ffmpeg=6.12.0
+	provides = qt6-multimedia-backend
+	conflicts = qt6-multimedia-ffmpeg

@@ -1,0 +1,124 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: cevdetch
+
+_pkgname=qt6-multimedia
+pkgbase=${_pkgname}-waypure
+pkgname=(qt6-multimedia-waypure
+         qt6-multimedia-ffmpeg-waypure)
+pkgver=6.12.0
+pkgrel=1
+pkgdesc="Classes for audio, video, radio and camera functionality"
+arch=('x86_64')
+url="https://github.com/qt/qtmultimedia"
+license=('GPL-3.0-only'
+         'LGPL-3.0-only'
+         'LicenseRef-Qt-Commercial'
+         'GPL-3.0-only WITH Qt-GPL-exception-1.0')
+groups=('qt6')
+depends=('glibc'
+         'libgcc'
+         'libstdc++'
+         'libpipewire'
+         'qt6-base')
+makedepends=('cmake'
+             'ffmpeg'
+             'libglvnd'
+             'libva'
+             'ninja'
+             'qt6-declarative'
+             'qt6-shadertools'
+             'vulkan-headers')
+source=("qtmultimedia-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('896543478b9dcdc1811e2960f74d926572cf5d97ce9ad7a53b6ea335cafe8561')
+
+build() {
+  local _cmake_options=(
+    -B build -G Ninja
+    -DCMAKE_BUILD_TYPE=None
+    -DCMAKE_INSTALL_PREFIX=/usr
+    -DCMAKE_MESSAGE_LOG_LEVEL=STATUS
+    "-DCMAKE_CXX_FLAGS=${CXXFLAGS} -ffat-lto-objects"
+    -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
+    -DBUILD_WITH_PCH=OFF
+    -DFEATURE_ffmpeg=ON
+    -DFEATURE_gstreamer=OFF
+    -DFEATURE_pipewire=ON
+    -DFEATURE_pipewire_screencapture=ON
+    -DFEATURE_pipewire_symbolloader=OFF
+    -DFEATURE_pulseaudio=OFF
+    -DFEATURE_alsa=OFF
+    -DFEATURE_vaapi=ON
+    -DFEATURE_linux_dmabuf=ON
+    -DFEATURE_linux_v4l=ON
+    -DFEATURE_multimedia_quick=ON
+    -DFEATURE_spatialaudio=ON
+    -DFEATURE_spatialaudio_quick3d=OFF
+    -DQT_DEPLOY_FFMPEG=OFF
+    -DQT_BUILD_EXAMPLES=OFF
+    -DQT_BUILD_TESTS=ON
+    -DQT_BUILD_TESTS_BY_DEFAULT=OFF
+    -DQT_BUILD_BENCHMARKS=OFF
+    -DQT_BUILD_MANUAL_TESTS=OFF
+  )
+  cmake -S "qtmultimedia-${pkgver}" "${_cmake_options[@]}"
+  cmake --build build --parallel "${NPROC:-$(nproc)}"
+}
+
+check() (
+  export LD_LIBRARY_PATH="${srcdir}/build/lib"
+  export QT_QPA_PLATFORM=offscreen
+  unset DISPLAY WAYLAND_DISPLAY
+
+  cmake --build build --parallel "${NPROC:-$(nproc)}" --target \
+    tst_qaudioformat tst_qmediatimerange tst_qffmpegmath tst_qpipewire_videoformat_support
+  ctest --test-dir build --output-on-failure --no-tests=error --timeout 180 \
+    -R '^(tst_qaudioformat|tst_qmediatimerange|tst_qffmpegmath|tst_qpipewire_videoformat_support)$'
+)
+
+package_qt6-multimedia-waypure() {
+  depends+=(qt6-multimedia-backend)
+  optdepends=('qt6-declarative: QML bindings')
+  provides=("${_pkgname}=${pkgver}")
+  conflicts=("${_pkgname}")
+
+  DESTDIR="${pkgdir}" cmake --install build
+  rm -r "${pkgdir}/usr/lib/qt6/plugins/multimedia"
+  rm "${pkgdir}"/usr/lib/cmake/Qt6Multimedia/Qt6QFFmpegMediaPlugin*.cmake
+  rm -r "${pkgdir}/usr/include/qt6/QtFFmpegMediaPluginImpl" \
+        "${pkgdir}/usr/lib/cmake/Qt6FFmpegMediaPluginImplPrivate"
+  rm "${pkgdir}"/usr/lib/libQt6FFmpegMediaPluginImpl.{a,prl} \
+     "${pkgdir}/usr/lib/qt6/metatypes/qt6ffmpegmediapluginimplprivate_metatypes.json" \
+     "${pkgdir}/usr/lib/qt6/mkspecs/modules/qt_lib_ffmpegmediapluginimpl_private.pri" \
+     "${pkgdir}/usr/lib/qt6/modules/FFmpegMediaPluginImplPrivate.json"
+
+  install -Dm644 "qtmultimedia-${pkgver}/LICENSES/"* -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  ln -s "${pkgname}" "${pkgdir}/usr/share/licenses/${_pkgname}"
+}
+
+package_qt6-multimedia-ffmpeg-waypure() {
+  pkgdesc="FFmpeg backend for Qt Multimedia"
+  license+=('MIT')
+  depends=('ffmpeg'
+           'glibc'
+           'libgcc'
+           'libglvnd'
+           'libstdc++'
+           'libva'
+           'qt6-base'
+           'qt6-declarative'
+           "qt6-multimedia-waypure=${pkgver}-${pkgrel}")
+  provides=("qt6-multimedia-ffmpeg=${pkgver}"
+            'qt6-multimedia-backend')
+  conflicts=('qt6-multimedia-ffmpeg')
+  groups=()
+
+  DESTDIR="${pkgdir}" cmake --install build/src/plugins/multimedia/ffmpeg
+  install -Dm644 build/lib/cmake/Qt6FFmpegMediaPluginImplPrivate/Qt6FFmpegMediaPluginImplPrivateDependencies.cmake \
+    -t "${pkgdir}/usr/lib/cmake/Qt6FFmpegMediaPluginImplPrivate"
+  install -Dm644 "qtmultimedia-${pkgver}/LICENSES/"* -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  install -Dm644 "qtmultimedia-${pkgver}/src/3rdparty/signalsmith-stretch/LICENSE.txt" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/signalsmith-stretch-LICENSE.txt"
+  install -Dm644 "qtmultimedia-${pkgver}/src/3rdparty/signalsmith-stretch/dsp/LICENSE.txt" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/signalsmith-dsp-LICENSE.txt"
+  ln -s "${pkgname}" "${pkgdir}/usr/share/licenses/qt6-multimedia-ffmpeg"
+}
