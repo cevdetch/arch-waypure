@@ -1,0 +1,105 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: Antonio Rojas <arojas@archlinux.org>
+# Contributor: Ronald van Haren <ronald.archlinux.org>
+
+_pkgname=r
+pkgname=${_pkgname}-waypure
+pkgver=4.6.2
+pkgrel=1
+pkgdesc='Statistical computing and graphics with Cairo output, without X11 or Tk'
+arch=('x86_64')
+url='https://www.r-project.org/'
+license=('GPL-2.0-or-later')
+depends=(
+  'bash' 'blas' 'bzip2' 'cairo' 'curl' 'glib2' 'glibc' 'icu' 'lapack'
+  'libdeflate' 'libgcc' 'libgfortran' 'libgomp' 'libjpeg-turbo' 'libpng' 'libtiff'
+  'libtirpc' 'pango' 'pcre2' 'readline' 'unzip' 'which' 'xz' 'zip' 'zlib' 'zstd'
+)
+makedepends=('gcc-fortran' 'jdk-openjdk' 'texinfo')
+optdepends=(
+  'blas-openblas: faster linear algebra'
+  'gcc-fortran: compile CRAN packages with Fortran code'
+  'java-runtime: Java configuration and integration'
+  'texlive-latex: LaTeX style files'
+)
+provides=("${_pkgname}=${pkgver}")
+conflicts=("${_pkgname}")
+backup=('etc/R/Makeconf' 'etc/R/Renviron' 'etc/R/ldpaths' 'etc/R/repositories' 'etc/R/javaconf')
+options=('!emptydirs')
+source=("https://cran.r-project.org/src/base/R-${pkgver%%.*}/R-${pkgver}.tar.gz"
+        'r.desktop' 'r.png' 'R.conf')
+sha256sums=('c297040f6392b1dac6e5c0eb398422cfdaedf540ae2205edb9ad0d10cb10ee00'
+            '25b01ea93fa704884b65ba002d44d4e99725bd826997e8c73b6467df9f23c798'
+            '1580d06a737951f4f3c903cbd514247d9071fc6868eb9c2de94bb999cc195cb1'
+            'b7833166041b06f716b6a79095d27d4abd83549816dc53193213827139eae6ef')
+
+prepare() {
+  sed -i 's|$(rsharedir)/texmf|${datarootdir}/texmf|' "R-${pkgver}/share/Makefile.in"
+}
+
+build() {
+  local _configure_options=(
+    --prefix=/usr
+    --libdir=/usr/lib
+    --sysconfdir=/etc/R
+    --datarootdir=/usr/share
+    rsharedir=/usr/share/R/
+    rincludedir=/usr/include/R/
+    rdocdir=/usr/share/doc/R/
+    --without-x
+    --without-tcltk
+    --with-cairo
+    --enable-R-shlib
+    --enable-memory-profiling
+    --with-recommended-packages
+    --with-lapack
+    --with-blas
+    F77=gfortran
+    LIBnn=lib
+  )
+
+  cd "R-${pkgver}"
+  CFLAGS+=" -ffat-lto-objects" CXXFLAGS+=" -ffat-lto-objects" ./configure "${_configure_options[@]}"
+  make
+  make info
+  make -C src/nmath/standalone shared
+}
+
+check() {
+  TZ=UTC make -C "R-${pkgver}" check
+}
+
+package() {
+  local file key value package version provision
+  cd "R-${pkgver}"
+  make DESTDIR="${pkgdir}" install install-info
+  make -C src/nmath/standalone DESTDIR="${pkgdir}" install
+
+  sed -i "s|${pkgdir} ||" "${pkgdir}/usr/bin/R"
+  rm "${pkgdir}/usr/lib/R/bin/R"
+  ln -s ../../../bin/R "${pkgdir}/usr/lib/R/bin/R"
+
+  install -Dm644 "${srcdir}/r.desktop" -t "${pkgdir}/usr/share/applications"
+  install -Dm644 "${srcdir}/r.png" -t "${pkgdir}/usr/share/pixmaps"
+  install -Dm644 "${srcdir}/R.conf" -t "${pkgdir}/etc/ld.so.conf.d"
+
+  install -d "${pkgdir}/etc/R"
+  for file in "${pkgdir}/usr/lib/R/etc/"*; do
+    mv "${file}" "${pkgdir}/etc/R/"
+    ln -s "/etc/R/${file##*/}" "${file}"
+  done
+
+  for file in "${pkgdir}/usr/lib/R/library/"*/DESCRIPTION; do
+    package= version=
+    while IFS=': ' read -r key value; do
+      case ${key} in
+        Package) package=${value} ;;
+        Version) version=${value} ;;
+      esac
+    done < "${file}"
+    if [[ ${package} != tcltk ]]; then
+      provision="r-${package,,}=${version//-/.}"
+      provides+=(${provision})
+    fi
+  done
+}
