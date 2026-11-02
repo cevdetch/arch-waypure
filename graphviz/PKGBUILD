@@ -1,0 +1,68 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: Lukas Fleischer <lfleischer@archlinux.org>
+
+_pkgname=graphviz
+pkgname=${_pkgname}-waypure
+pkgver=16.1.0
+pkgrel=1
+pkgdesc='Graph visualization tools and libraries without X11'
+arch=('x86_64')
+url='https://www.graphviz.org/'
+license=('EPL-2.0')
+depends=('glibc' 'libgcc' 'libstdc++' 'cairo' 'glib2' 'libltdl' 'gd' 'librsvg' 'ghostscript'
+         'pango' 'gts' 'gsfonts' 'expat' 'zlib' 'libwebp')
+makedepends=('swig' 'mono' 'guile' 'lua' 'perl' 'python' 'r' 'tcl' 'qt6-base')
+optdepends=(
+  'mono: C# bindings'
+  'guile: Guile bindings'
+  'lua: Lua bindings'
+  'perl: Perl bindings'
+  'python: Python bindings'
+  'r: R bindings'
+  'tcl: Tcl bindings'
+  'qt6-base: gvedit graph editor'
+)
+provides=("${_pkgname}=${pkgver}")
+conflicts=("${_pkgname}")
+install=graphviz.install
+source=("https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${pkgver}/${_pkgname}-${pkgver}.tar.gz")
+sha256sums=('beea483ab130f456c1c3905f4f2e40778a9c493c3d73ae8012367d552d71ca84')
+
+build() {
+  local _configure_options=(
+    --prefix=/usr
+    --libdir=/usr/lib
+    --disable-static
+    --without-x
+    --without-gdk
+    --without-gtk
+    --without-gtkgl
+    --without-gtkglext
+    --without-glade
+    --without-glut
+    --without-smyrna
+    --without-ghostscript
+    --with-qt=yes
+    --enable-python3=yes
+    --enable-sharp=yes
+    --enable-guile=yes
+    --enable-lua=yes
+    --enable-perl=yes
+    --enable-r=yes
+    --enable-tcl=yes
+    LIBPOSTFIX=
+  )
+
+  cd "${_pkgname}-${pkgver}"
+  export CXXFLAGS+=" -fPIC -fpermissive"
+  ./configure "${_configure_options[@]}"
+  make
+}
+
+package() {
+  make -C "${_pkgname}-${pkgver}" DESTDIR="${pkgdir}" install
+  ln -sf gv2gxl.1.gz "${pkgdir}/usr/share/man/man1/dot2gxl.1.gz"
+  rm "${pkgdir}/usr/share/man/man1/dot2gxl.1"
+  rm -r "${pkgdir}/usr/lib/tcl8.6/graphviz"
+  ln -s ../graphviz/tcl "${pkgdir}/usr/lib/tcl8.6/graphviz"
+}
