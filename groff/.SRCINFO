@@ -1,0 +1,30 @@
+pkgbase = groff-waypure
+	pkgdesc = GNU troff text-formatting system without X11 tools
+	pkgver = 1.24.2
+	pkgrel = 1
+	url = https://www.gnu.org/software/groff/
+	arch = x86_64
+	license = GPL-3.0-or-later
+	makedepends = netpbm
+	makedepends = psutils
+	makedepends = perl-file-homedir
+	depends = glibc
+	depends = libgcc
+	depends = libstdc++
+	depends = perl
+	optdepends = netpbm: HTML output with embedded images
+	optdepends = psutils: PostScript processing for HTML output
+	optdepends = perl-file-homedir: glilypond support
+	provides = groff=1.24.2
+	conflicts = groff
+	options = !docs
+	options = !emptydirs
+	options = !makeflags
+	source = https://ftp.gnu.org/gnu/groff/groff-1.24.2.tar.gz
+	source = site.tmac
+	source = html-image-name-guard.patch
+	sha256sums = f9c1efd5bebbe37fc6e1063db7473ce8df1e3e0be4ff0f43ce04fce57e9c5dd9
+	sha256sums = fa6ad35f27caaf285a26b1ee87607643552e4c02a641b58a6034b0d153eb920f
+	sha256sums = b2e239b416831487b098699f1436af98a57ed6f9ae710322418eb39e4889daa5
+
+pkgname = groff-waypure

@@ -1,0 +1,17 @@
+--- a/src/preproc/html/pre-html.cpp
++++ b/src/preproc/html/pre-html.cpp
+@@ -1050,12 +1050,12 @@
+ 	     + 1 + IMAGE_BORDER_PIXELS;
+     if (createPage(i->pageNo) == 0) {
+       for (const char *p = i->imageName; *p != '\0'; p++) {
+-	if (strchr(";&|*?~<>^()[]{}'$`\"\\#", *p != 0 /* nullptr */)) {
++	if (strchr(";&|*?~<>^()[]{}'$`\"\\#", *p) != 0 /* nullptr */) {
+ 	  char q = '\'';
+ 	  if ('\'' == *p)
+ 	    q = '\"';
+ 	  fprintf(stderr, "%s: fatal error: unsafe shell character"
+-		  " %c%c%c in raster image file name", q, *p, q);
++		  " %c%c%c in raster image file name", program_name, q, *p, q);
+ 	  fflush(stderr);
+ 	  exit(EXIT_FAILURE);
+ 	}

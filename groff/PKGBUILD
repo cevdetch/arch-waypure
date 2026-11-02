@@ -1,0 +1,54 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: Tobias Powalowski <tpowa@archlinux.org>
+
+_pkgname=groff
+pkgname=${_pkgname}-waypure
+pkgver=1.24.2
+pkgrel=1
+pkgdesc='GNU troff text-formatting system without X11 tools'
+arch=('x86_64')
+url='https://www.gnu.org/software/groff/'
+license=('GPL-3.0-or-later')
+depends=('glibc' 'libgcc' 'libstdc++' 'perl')
+makedepends=('netpbm' 'psutils' 'perl-file-homedir')
+optdepends=(
+  'netpbm: HTML output with embedded images'
+  'psutils: PostScript processing for HTML output'
+  'perl-file-homedir: glilypond support'
+)
+provides=("${_pkgname}=${pkgver}")
+conflicts=("${_pkgname}")
+options=('!docs' '!emptydirs' '!makeflags')
+source=("https://ftp.gnu.org/gnu/${_pkgname}/${_pkgname}-${pkgver}.tar.gz"
+        'site.tmac' 'html-image-name-guard.patch')
+sha256sums=('f9c1efd5bebbe37fc6e1063db7473ce8df1e3e0be4ff0f43ce04fce57e9c5dd9'
+            'fa6ad35f27caaf285a26b1ee87607643552e4c02a641b58a6034b0d153eb920f'
+            'b2e239b416831487b098699f1436af98a57ed6f9ae710322418eb39e4889daa5')
+
+prepare() {
+  patch -d "${_pkgname}-${pkgver}" -Np1 -i "${srcdir}/html-image-name-guard.patch"
+}
+
+build() {
+  local _configure_options=(
+    --prefix=/usr
+    --without-x
+  )
+
+  cd "${_pkgname}-${pkgver}"
+  ./configure "${_configure_options[@]}"
+  make
+}
+
+check() {
+  make -C "${_pkgname}-${pkgver}" check
+}
+
+package() {
+  make -C "${_pkgname}-${pkgver}" DESTDIR="${pkgdir}" install
+  ln -s eqn "${pkgdir}/usr/bin/geqn"
+  ln -s tbl "${pkgdir}/usr/bin/gtbl"
+  ln -s soelim "${pkgdir}/usr/bin/zsoelim"
+  cat site.tmac >> "${pkgdir}/usr/share/groff/site-tmac/man.local"
+  cat site.tmac >> "${pkgdir}/usr/share/groff/site-tmac/mdoc.local"
+}
