@@ -1,0 +1,24 @@
+pkgbase = hwloc-waypure
+	pkgdesc = Portable hardware locality library and tools without X11
+	pkgver = 2.15.0
+	pkgrel = 1
+	url = https://www.open-mpi.org/projects/hwloc/
+	arch = x86_64
+	license = BSD-3-Clause
+	makedepends = cairo
+	makedepends = libxml2
+	makedepends = systemd
+	depends = glibc
+	depends = libpciaccess
+	depends = ncurses
+	depends = systemd-libs
+	optdepends = cairo: PDF, PostScript, PNG and SVG export
+	optdepends = libxml2: full XML import and export
+	provides = hwloc=2.15.0
+	provides = libhwloc.so
+	conflicts = hwloc
+	options = !docs
+	source = https://download.open-mpi.org/release/hwloc/v2.15/hwloc-2.15.0.tar.bz2
+	sha256sums = 0084b926fff9a960ddbf175654db39054ed60afbb830d2039d8a60686ca06a7f
+
+pkgname = hwloc-waypure

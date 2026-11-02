@@ -1,0 +1,51 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: Levente Polyak <anthraxx@archlinux.org>
+# Contributor: Carl Smedstad <carsme@archlinux.org>
+
+_pkgname=hwloc
+pkgname=${_pkgname}-waypure
+pkgver=2.15.0
+pkgrel=1
+pkgdesc='Portable hardware locality library and tools without X11'
+arch=('x86_64')
+url='https://www.open-mpi.org/projects/hwloc/'
+license=('BSD-3-Clause')
+depends=('glibc' 'libpciaccess' 'ncurses' 'systemd-libs')
+makedepends=('cairo' 'libxml2' 'systemd')
+optdepends=(
+  'cairo: PDF, PostScript, PNG and SVG export'
+  'libxml2: full XML import and export'
+)
+provides=("${_pkgname}=${pkgver}" 'libhwloc.so')
+conflicts=("${_pkgname}")
+options=('!docs')
+source=("https://download.open-mpi.org/release/${_pkgname}/v${pkgver%.*}/${_pkgname}-${pkgver}.tar.bz2")
+sha256sums=('0084b926fff9a960ddbf175654db39054ed60afbb830d2039d8a60686ca06a7f')
+
+build() {
+  local _configure_options=(
+    --prefix=/usr
+    --sbindir=/usr/bin
+    --sysconfdir=/etc
+    --enable-plugins
+    --enable-cairo
+    --enable-libxml2
+    --without-x
+    --disable-gl
+    # configure probes X headers even with --without-x.
+    ac_cv_header_X11_Xlib_h=no
+  )
+
+  cd "${_pkgname}-${pkgver}"
+  ./configure "${_configure_options[@]}"
+  make
+}
+
+check() {
+  make -C "${_pkgname}-${pkgver}" check
+}
+
+package() {
+  make -C "${_pkgname}-${pkgver}" DESTDIR="${pkgdir}" install
+  install -Dm644 "${_pkgname}-${pkgver}/COPYING" -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
