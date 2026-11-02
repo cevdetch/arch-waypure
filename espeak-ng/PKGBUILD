@@ -1,0 +1,59 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: Daniel M. Capella <polyzen@archlinux.org>
+# Contributor: Alexander Epaneshnikov <alex19ep@archlinux.org>
+
+_pkgname=espeak-ng
+pkgname=${_pkgname}-waypure
+pkgver=1.52.0
+pkgrel=1
+pkgdesc='Multi-lingual software speech synthesizer'
+arch=('x86_64')
+url='https://github.com/espeak-ng/espeak-ng'
+license=('GPL-3.0-or-later')
+depends=(glibc libgcc libstdc++ libsonic pcaudiolib)
+makedepends=(cmake ninja ruby-ronn-ng)
+checkdepends=(python)
+provides=("${_pkgname}=${pkgver}" 'espeak-ng-espeak')
+conflicts=("${_pkgname}" 'espeak-ng-espeak' 'espeak')
+replaces=('espeak-ng-espeak')
+source=("${_pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/${pkgver}.tar.gz"
+        'piper-terminator-api.patch')
+sha256sums=('bb4338102ff3b49a81423da8a1a158b420124b055b60fa76cfb4b18677130a23'
+            '96cef8e2789b1e249648998a7d80fa021f589c81510b0bff59f66ea7e4fcfdad')
+
+prepare() {
+  cd "${_pkgname}-${pkgver}"
+  patch -Np1 -i ../piper-terminator-api.patch
+}
+
+build() {
+  local _cmake_options=(
+    -B build -S "${_pkgname}-${pkgver}" -G Ninja
+    -DCMAKE_INSTALL_PREFIX=/usr
+    -DCMAKE_INSTALL_LIBDIR=lib
+    -DCMAKE_BUILD_TYPE=None
+    -DCMAKE_SKIP_INSTALL_RPATH=ON
+    -DFETCHCONTENT_FULLY_DISCONNECTED=ON
+    -DBUILD_SHARED_LIBS=ON
+    -DBUILD_TESTING=ON
+    -DESPEAK_COMPAT=ON
+    -DESPEAK_BUILD_MANPAGES=ON
+    -DUSE_LIBSONIC=ON # SYSTEM
+    -DUSE_LIBPCAUDIO=ON # PIPEWIRE
+    -DUSE_ASYNC=ON
+    -DUSE_KLATT=ON
+    -DUSE_SPEECHPLAYER=ON
+    -DUSE_MBROLA=OFF
+  )
+  cmake "${_cmake_options[@]}"
+  cmake --build build --parallel "${NPROC:-4}"
+}
+
+check() {
+  ctest --test-dir build --output-on-failure --no-tests=error
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+  rm -r "${pkgdir}/usr/include/espeak"
+}

@@ -1,0 +1,28 @@
+pkgbase = espeak-ng-waypure
+	pkgdesc = Multi-lingual software speech synthesizer
+	pkgver = 1.52.0
+	pkgrel = 1
+	url = https://github.com/espeak-ng/espeak-ng
+	arch = x86_64
+	license = GPL-3.0-or-later
+	checkdepends = python
+	makedepends = cmake
+	makedepends = ninja
+	makedepends = ruby-ronn-ng
+	depends = glibc
+	depends = libgcc
+	depends = libstdc++
+	depends = libsonic
+	depends = pcaudiolib
+	provides = espeak-ng=1.52.0
+	provides = espeak-ng-espeak
+	conflicts = espeak-ng
+	conflicts = espeak-ng-espeak
+	conflicts = espeak
+	replaces = espeak-ng-espeak
+	source = espeak-ng-1.52.0.tar.gz::https://github.com/espeak-ng/espeak-ng/archive/refs/tags/1.52.0.tar.gz
+	source = piper-terminator-api.patch
+	sha256sums = bb4338102ff3b49a81423da8a1a158b420124b055b60fa76cfb4b18677130a23
+	sha256sums = 96cef8e2789b1e249648998a7d80fa021f589c81510b0bff59f66ea7e4fcfdad
+
+pkgname = espeak-ng-waypure
