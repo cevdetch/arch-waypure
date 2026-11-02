@@ -1,0 +1,11 @@
+--- a/encode/av1encode.c
++++ b/encode/av1encode.c
+@@ -2251,7 +2251,7 @@
+ {
+     CHECK_NULL(pps);
+     // InitPPS
+-    memset(&(pps->reference_frames), VA_INVALID_ID, 8);
++    memset(pps->reference_frames, VA_INVALID_ID, sizeof(pps->reference_frames));
+ 
+     //frame size
+     pps->frame_height_minus_1  =(uint16_t)(fh.FrameHeight - 1);

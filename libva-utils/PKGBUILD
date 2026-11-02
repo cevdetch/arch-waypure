@@ -1,0 +1,42 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: Bruno Pagani <archange@archlinux.org>
+# Contributor: Sean V Kelley <seanvk@posteo.de>
+
+_pkgname=libva-utils
+pkgname=${_pkgname}-waypure
+pkgver=2.24.0
+pkgrel=1
+pkgdesc='VA-API media utilities with DRM and Wayland support'
+arch=('x86_64')
+url='https://github.com/intel/libva-utils'
+license=('MIT')
+depends=('glibc' 'libgcc' 'libstdc++' 'libva' 'libdrm' 'wayland')
+makedepends=('meson')
+provides=("${_pkgname}=${pkgver}")
+conflicts=("${_pkgname}")
+source=("${url}/archive/${pkgver}/${_pkgname}-${pkgver}.tar.gz"
+        'av1-reference-initialization.patch')
+sha256sums=('bf959a1ced3cde8176a7ff50ad358ee98e93301ac068581a8b2617c5b83afcb3'
+            '442e002abcbe305d02b53d9362d75ee982420dc8fcfb43198bf38558093b90f5')
+
+prepare() {
+  patch -d "${_pkgname}-${pkgver}" -Np1 -i "${srcdir}/av1-reference-initialization.patch"
+}
+
+build() {
+  local _meson_options=(
+    -Ddrm=true
+    -Dwayland=true
+    -Dx11=false
+    -Dwin32=false
+    -Dtests=false
+  )
+
+  arch-meson "${_pkgname}-${pkgver}" build "${_meson_options[@]}"
+  meson compile -C build
+}
+
+package() {
+  DESTDIR="${pkgdir}" meson install -C build
+  install -Dm644 "${_pkgname}-${pkgver}/COPYING" -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}

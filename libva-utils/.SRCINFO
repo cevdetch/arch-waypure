@@ -1,0 +1,22 @@
+pkgbase = libva-utils-waypure
+	pkgdesc = VA-API media utilities with DRM and Wayland support
+	pkgver = 2.24.0
+	pkgrel = 1
+	url = https://github.com/intel/libva-utils
+	arch = x86_64
+	license = MIT
+	makedepends = meson
+	depends = glibc
+	depends = libgcc
+	depends = libstdc++
+	depends = libva
+	depends = libdrm
+	depends = wayland
+	provides = libva-utils=2.24.0
+	conflicts = libva-utils
+	source = https://github.com/intel/libva-utils/archive/2.24.0/libva-utils-2.24.0.tar.gz
+	source = av1-reference-initialization.patch
+	sha256sums = bf959a1ced3cde8176a7ff50ad358ee98e93301ac068581a8b2617c5b83afcb3
+	sha256sums = 442e002abcbe305d02b53d9362d75ee982420dc8fcfb43198bf38558093b90f5
+
+pkgname = libva-utils-waypure
