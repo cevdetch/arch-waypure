@@ -1,0 +1,54 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+# Contributor: Levente Polyak <anthraxx@archlinux.org>
+# Contributor: Carl Smedstad <carsme@archlinux.org>
+
+_pkgname=libgdiplus
+pkgname=${_pkgname}-waypure
+pkgver=6.2
+pkgrel=1
+pkgdesc='Cairo-based GDI+ implementation without X11'
+arch=('x86_64')
+url='https://gitlab.winehq.org/mono/libgdiplus'
+license=('MIT')
+depends=('cairo' 'fontconfig' 'freetype2' 'glib2' 'glibc' 'harfbuzz' 'libexif'
+         'libjpeg-turbo' 'libpng' 'libtiff' 'pango' 'giflib')
+checkdepends=('ttf-dejavu')
+provides=("${_pkgname}=${pkgver}" 'libgdiplus.so')
+conflicts=("${_pkgname}")
+source=("${url}/-/archive/${pkgver}/${_pkgname}-${pkgver}.tar.gz"
+        'private-font-map-refresh.patch')
+sha256sums=('98b31143d5bb1cf5c38088bee18e4ba2993ddf132da1ed985dbe576eef1ff501'
+            '5decfa549525a2902ec3fbc3e2fb3074382289a0d0fca0eccea19265d93fa374')
+
+prepare() {
+  cd "${_pkgname}-${pkgver}"
+  patch -Np1 -i "${srcdir}/private-font-map-refresh.patch"
+  sed -i 's/: update_submodules/:/' Makefile.am
+  autoreconf -fiv
+}
+
+build() {
+  local _configure_options=(
+    --prefix=/usr
+    --disable-static
+    --with-pango
+    --without-x11
+    # The release snapshot lacks googletest; retain the ordinary C tests.
+    ac_cv_path_CMAKE=no
+  )
+
+  cd "${_pkgname}-${pkgver}"
+  ./configure "${_configure_options[@]}"
+  make
+}
+
+check() {
+  make -C "${_pkgname}-${pkgver}" check
+}
+
+package() {
+  make -C "${_pkgname}-${pkgver}" DESTDIR="${pkgdir}" install
+  install -Dm644 "${_pkgname}-${pkgver}/LICENSE" -t "${pkgdir}/usr/share/licenses/${pkgname}"
+  install -Dm644 "${_pkgname}-${pkgver}/"{NEWS,README.md,TODO,AUTHORS,ChangeLog} \
+    -t "${pkgdir}/usr/share/doc/${pkgname}"
+}
