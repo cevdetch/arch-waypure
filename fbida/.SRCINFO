@@ -1,0 +1,33 @@
+pkgbase = fbida-waypure
+	pkgdesc = Framebuffer/DRM image and PDF viewers and lossless JPEG transformations
+	pkgver = 2.14
+	pkgrel = 1
+	url = https://www.kraxel.org/blog/linux/fbida/
+	arch = x86_64
+	license = GPL-2.0-only
+	depends = fontconfig
+	depends = freetype2
+	depends = giflib
+	depends = glibc
+	depends = libdrm
+	depends = libepoxy
+	depends = libexif
+	depends = libjpeg-turbo
+	depends = libpng
+	depends = libtiff
+	depends = libwebp
+	depends = mesa
+	depends = pixman
+	depends = poppler-glib
+	optdepends = ghostscript: render PostScript files with fbgs
+	provides = fbida=2.14
+	conflicts = fbida
+	source = https://www.kraxel.org/releases/fbida/fbida-2.14.tar.gz
+	source = https://www.kraxel.org/releases/fbida/fbida-2.14.tar.gz.asc
+	source = fbida-gcc10.patch::https://gitlab.com/kraxel/fbida/-/commit/1bb8a8aa.patch
+	validpgpkeys = A0328CFFB93A17A79901FE7D4CB6D8EED3E87138
+	sha256sums = 95b7c01556cb6ef9819f358b314ddfeb8a4cbe862b521a3ed62f03d163154438
+	sha256sums = 7ea027fb1470106acb92582e74c4f0f8e2e4eb06128801604ddd657f7f2b85fd
+	sha256sums = 3a76829dba124b542631cb3d78da6414a339e1cbb3bf5c6451d677f51bcf3c76
+
+pkgname = fbida-waypure
