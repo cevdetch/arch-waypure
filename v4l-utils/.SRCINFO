@@ -1,0 +1,42 @@
+pkgbase = v4l-utils-waypure
+	pkgdesc = Userspace tools and conversion library for Video 4 Linux
+	pkgver = 1.32.0
+	pkgrel = 1
+	url = https://linuxtv.org/
+	arch = x86_64
+	license = GPL-2.0-only
+	license = GPL-2.0-or-later
+	license = LGPL-2.1-only
+	license = LGPL-2.1-or-later
+	license = MIT
+	makedepends = qt6-base
+	makedepends = qt6-5compat
+	makedepends = alsa-lib
+	makedepends = meson
+	makedepends = clang
+	makedepends = doxygen
+	makedepends = glu
+	makedepends = libglvnd
+	depends = hicolor-icon-theme
+	depends = libgcc
+	depends = libbpf
+	depends = libjpeg-turbo
+	depends = systemd-libs
+	depends = json-c
+	optdepends = qt6-base: for qv4l2 and qvidcap
+	optdepends = qt6-5compat: for qv4l2
+	optdepends = alsa-lib: for qv4l2
+	provides = v4l-utils=1.32.0
+	provides = libv4l=1.32.0
+	conflicts = v4l-utils
+	conflicts = libv4l
+	backup = etc/rc_maps.cfg
+	source = https://linuxtv.org/downloads/v4l-utils/v4l-utils-1.32.0.tar.xz
+	source = https://linuxtv.org/downloads/v4l-utils/v4l-utils-1.32.0.tar.xz.asc
+	source = 0001-Prefer-GLVND-OpenGL-for-Qt-viewers.patch
+	validpgpkeys = 05D0169C26E41593418129DF199A64FADFB500FF
+	sha256sums = 6828828a17775526eb93fb258a9294d1d1073d633c344dd71ecd4e7a1ffb7dfc
+	sha256sums = 56fbd3f61b8ee4719ee597b578eb7ab5c396ef2fa16a6ce303f7c5a51a115e40
+	sha256sums = 36286f2b67be5d942b97078c3f282d6659471a61d4e76815b72abedf02e33717
+
+pkgname = v4l-utils-waypure

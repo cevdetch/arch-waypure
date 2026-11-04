@@ -1,0 +1,51 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+
+_pkgname=v4l-utils
+pkgname=${_pkgname}-waypure
+pkgver=1.32.0
+pkgrel=1
+pkgdesc='Userspace tools and conversion library for Video 4 Linux'
+arch=('x86_64')
+url='https://linuxtv.org/'
+license=('GPL-2.0-only' 'GPL-2.0-or-later' 'LGPL-2.1-only' 'LGPL-2.1-or-later' 'MIT')
+depends=('hicolor-icon-theme' 'libgcc' 'libbpf' 'libjpeg-turbo' 'systemd-libs' 'json-c')
+makedepends=('qt6-base' 'qt6-5compat' 'alsa-lib' 'meson' 'clang' 'doxygen' 'glu' 'libglvnd')
+optdepends=('qt6-base: for qv4l2 and qvidcap'
+            'qt6-5compat: for qv4l2'
+            'alsa-lib: for qv4l2')
+provides=("${_pkgname}=${pkgver}" "libv4l=${pkgver}")
+conflicts=("${_pkgname}" 'libv4l')
+backup=('etc/rc_maps.cfg')
+source=("https://linuxtv.org/downloads/v4l-utils/${_pkgname}-${pkgver}.tar.xz"
+        "https://linuxtv.org/downloads/v4l-utils/${_pkgname}-${pkgver}.tar.xz.asc"
+        '0001-Prefer-GLVND-OpenGL-for-Qt-viewers.patch')
+sha256sums=('6828828a17775526eb93fb258a9294d1d1073d633c344dd71ecd4e7a1ffb7dfc' '56fbd3f61b8ee4719ee597b578eb7ab5c396ef2fa16a6ce303f7c5a51a115e40' '36286f2b67be5d942b97078c3f282d6659471a61d4e76815b72abedf02e33717')
+validpgpkeys=('05D0169C26E41593418129DF199A64FADFB500FF')
+
+prepare() {
+  cd "${_pkgname}-${pkgver}"
+  patch -Np1 -i "${srcdir}/0001-Prefer-GLVND-OpenGL-for-Qt-viewers.patch"
+  sed -i 's/sbin/bin/' utils/v4l2-dbg/meson.build
+}
+
+build() {
+  local _meson_options=(
+    -D gconv=disabled
+    -D x11=disabled
+    -D qv4l2=enabled
+    -D qvidcap=enabled
+    -D jpeg=enabled
+    -D bpf=enabled
+    -D libdvbv5=enabled
+    -D v4l2-tracer=enabled
+    -D doxygen-doc=enabled
+  )
+  arch-meson "${_pkgname}-${pkgver}" build "${_meson_options[@]}"
+  meson compile -C build -j "${NPROC:-2}"
+}
+
+package() {
+  meson install -C build --destdir "${pkgdir}"
+  install -Dm644 "${_pkgname}-${pkgver}/utils/edid-decode/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE.edid-decode"
+}

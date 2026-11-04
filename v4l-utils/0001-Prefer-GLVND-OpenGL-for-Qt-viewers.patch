@@ -1,0 +1,32 @@
+--- a/meson.build
++++ b/meson.build
+@@ -116,7 +116,10 @@
+     conf.set('HAVE_ALSA', 1)
+ endif
+ 
+-dep_gl = dependency('gl', required : get_option('qvidcap').enabled())
++dep_gl = dependency('opengl', required : false)
++if not dep_gl.found()
++    dep_gl = dependency('gl', required : get_option('qvidcap').enabled())
++endif
+ dep_glu = dependency('glu', required : false)
+ 
+ dep_jsonc = dependency('json-c', required : get_option('v4l2-tracer'), version : '>=0.15')
+@@ -160,7 +163,7 @@
+ endif
+ 
+ dep_threads = dependency('threads')
+-dep_x11 = dependency('x11', required : false)
++dep_x11 = dependency('x11', required : get_option('x11'))
+ dep_xmlrpc = dependency('xmlrpc', required : false)
+ 
+ have_fork = cc.has_function('fork', prefix: '#include <unistd.h>')
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -1,4 +1,6 @@
+ # Features
++option('x11', type : 'feature', value : 'auto',
++       description : 'Enable X11-only contributor examples')
+ option('bpf', type : 'feature', value : 'auto',
+        description : 'Enable IR BPF decoders')
+ option('gconv', type : 'feature', value : 'auto',
