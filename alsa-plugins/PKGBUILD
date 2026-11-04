@@ -1,0 +1,57 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+
+_pkgname=alsa-plugins
+pkgname=${_pkgname}-waypure
+pkgver=1.2.12
+pkgrel=1
+epoch=1
+pkgdesc='Additional ALSA plugins without JACK'
+arch=('x86_64')
+url='https://www.alsa-project.org'
+license=('GPL-2.0-or-later' 'LGPL-2.1-or-later')
+depends=('alsa-lib' 'libasound.so' 'glibc')
+makedepends=('dbus' 'ffmpeg' 'libavtp' 'libpulse' 'libsamplerate' 'speexdsp')
+optdepends=('dbus: for the Maemo plugin'
+            'ffmpeg: for A52 encoding and libav resampling'
+            'libavtp: for the AAF plugin'
+            'libsamplerate: for samplerate conversion'
+            'libpulse: for Pulse client plugins'
+            'speexdsp: for Speex DSP and resampling')
+provides=("${_pkgname}=${epoch}:${pkgver}")
+conflicts=("${_pkgname}")
+source=("https://www.alsa-project.org/files/pub/plugins/${_pkgname}-${pkgver}.tar.bz2"
+        "https://www.alsa-project.org/files/pub/plugins/${_pkgname}-${pkgver}.tar.bz2.sig"
+        'pulse-sysdefault.diff'
+        'ffmpeg9.patch')
+sha256sums=('7bd8a83d304e8e2d86a25895d8dcb0ef0245a8df32e271959cdbdc6af39b66f2' '890d85766b2cbc18e2d29a40ba07e22963082f08710ba50ca5b8ddcfcece14d4' 'd8c59b891e2913619d057ffea308293d73892b16fa5a01583d056e372e55309d' '9013c85f4406fe8eb827390d6d339c791a88e3b36d7884068594dcbcc1a16de7')
+validpgpkeys=('F04DF50737AC1A884C4B3D718380596DA6E59C91')
+
+prepare() {
+  cd "${_pkgname}-${pkgver}"
+  patch -Np1 -i "${srcdir}/pulse-sysdefault.diff"
+  patch -Np1 -i "${srcdir}/ffmpeg9.patch"
+  autoreconf -fiv
+}
+
+build() {
+  cd "${_pkgname}-${pkgver}"
+  local _configure_options=(
+    --prefix=/usr
+    --sysconfdir=/etc
+    --disable-jack
+    --enable-maemo-plugin
+    --enable-maemo-resource-manager
+  )
+  ./configure "${_configure_options[@]}"
+  sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool
+  make
+}
+
+package() {
+  cd "${_pkgname}-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 doc/README* doc/*.txt -t "${pkgdir}/usr/share/doc/${_pkgname}"
+  rm "${pkgdir}/etc/alsa/conf.d/98-maemo.conf"
+  mv "${pkgdir}/etc/alsa/conf.d/99-pulseaudio-default.conf.example" \
+    "${pkgdir}/usr/share/alsa/alsa.conf.d/99-pulseaudio-default.conf"
+}

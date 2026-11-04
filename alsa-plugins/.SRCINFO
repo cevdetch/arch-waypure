@@ -1,0 +1,37 @@
+pkgbase = alsa-plugins-waypure
+	pkgdesc = Additional ALSA plugins without JACK
+	pkgver = 1.2.12
+	pkgrel = 1
+	epoch = 1
+	url = https://www.alsa-project.org
+	arch = x86_64
+	license = GPL-2.0-or-later
+	license = LGPL-2.1-or-later
+	makedepends = dbus
+	makedepends = ffmpeg
+	makedepends = libavtp
+	makedepends = libpulse
+	makedepends = libsamplerate
+	makedepends = speexdsp
+	depends = alsa-lib
+	depends = libasound.so
+	depends = glibc
+	optdepends = dbus: for the Maemo plugin
+	optdepends = ffmpeg: for A52 encoding and libav resampling
+	optdepends = libavtp: for the AAF plugin
+	optdepends = libsamplerate: for samplerate conversion
+	optdepends = libpulse: for Pulse client plugins
+	optdepends = speexdsp: for Speex DSP and resampling
+	provides = alsa-plugins=1:1.2.12
+	conflicts = alsa-plugins
+	source = https://www.alsa-project.org/files/pub/plugins/alsa-plugins-1.2.12.tar.bz2
+	source = https://www.alsa-project.org/files/pub/plugins/alsa-plugins-1.2.12.tar.bz2.sig
+	source = pulse-sysdefault.diff
+	source = ffmpeg9.patch
+	validpgpkeys = F04DF50737AC1A884C4B3D718380596DA6E59C91
+	sha256sums = 7bd8a83d304e8e2d86a25895d8dcb0ef0245a8df32e271959cdbdc6af39b66f2
+	sha256sums = 890d85766b2cbc18e2d29a40ba07e22963082f08710ba50ca5b8ddcfcece14d4
+	sha256sums = d8c59b891e2913619d057ffea308293d73892b16fa5a01583d056e372e55309d
+	sha256sums = 9013c85f4406fe8eb827390d6d339c791a88e3b36d7884068594dcbcc1a16de7
+
+pkgname = alsa-plugins-waypure
