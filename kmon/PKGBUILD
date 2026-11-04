@@ -1,0 +1,51 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+
+_pkgname=kmon
+pkgname=${_pkgname}-waypure
+pkgver=1.7.1
+pkgrel=1
+pkgdesc='Linux kernel manager and activity monitor'
+arch=('x86_64')
+url='https://github.com/orhun/kmon'
+license=('GPL-3.0-only')
+depends=('glibc' 'libgcc' 'kmod' 'wl-clipboard')
+makedepends=('rust')
+provides=("${_pkgname}=${pkgver}")
+conflicts=("${_pkgname}")
+source=("${_pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz"
+        'selectable-clipboard-backends.patch')
+sha256sums=('fd8e02c17089e88c2b019e116e0b7fdd9fe4285327bd795de90622aba4b79469'
+            'dcb9f5abed4642fc83ecc9aeac7650bab967d81528324028c70a91e153173102')
+
+prepare() {
+  cd "${_pkgname}-${pkgver}"
+  patch -Np1 -i ../selectable-clipboard-backends.patch
+  cargo fetch --locked --target "$(rustc --print host-tuple)"
+}
+
+build() {
+  cd "${_pkgname}-${pkgver}"
+  local _cargo_options=(
+    --release
+    --frozen
+    --no-default-features # WAYLAND
+    --features wayland # WAYLAND
+  )
+  cargo build "${_cargo_options[@]}"
+}
+
+check() {
+  cd "${_pkgname}-${pkgver}"
+  cargo test --frozen --no-default-features --features wayland
+}
+
+package() {
+  cd "${_pkgname}-${pkgver}"
+  install -Dm755 "target/release/${_pkgname}" -t "${pkgdir}/usr/bin"
+  install -Dm644 README.md -t "${pkgdir}/usr/share/doc/${_pkgname}"
+  install -Dm644 "target/man/${_pkgname}.8" -t "${pkgdir}/usr/share/man/man8"
+  install -Dm644 "target/completions/${_pkgname}.bash" "${pkgdir}/usr/share/bash-completion/completions/${_pkgname}"
+  install -Dm644 "target/completions/${_pkgname}.fish" -t "${pkgdir}/usr/share/fish/vendor_completions.d"
+  install -Dm644 "target/completions/_${_pkgname}" -t "${pkgdir}/usr/share/zsh/site-functions"
+  install -Dm644 "target/completions/${_pkgname}.elv" -t "${pkgdir}/usr/share/elvish/lib"
+}

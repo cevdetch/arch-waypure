@@ -1,0 +1,20 @@
+pkgbase = kmon-waypure
+	pkgdesc = Linux kernel manager and activity monitor
+	pkgver = 1.7.1
+	pkgrel = 1
+	url = https://github.com/orhun/kmon
+	arch = x86_64
+	license = GPL-3.0-only
+	makedepends = rust
+	depends = glibc
+	depends = libgcc
+	depends = kmod
+	depends = wl-clipboard
+	provides = kmon=1.7.1
+	conflicts = kmon
+	source = kmon-1.7.1.tar.gz::https://github.com/orhun/kmon/archive/v1.7.1.tar.gz
+	source = selectable-clipboard-backends.patch
+	sha256sums = fd8e02c17089e88c2b019e116e0b7fdd9fe4285327bd795de90622aba4b79469
+	sha256sums = dcb9f5abed4642fc83ecc9aeac7650bab967d81528324028c70a91e153173102
+
+pkgname = kmon-waypure
