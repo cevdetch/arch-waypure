@@ -1,0 +1,49 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+
+_pkgname=libtiff
+pkgname=${_pkgname}-waypure
+pkgver=4.7.2
+pkgrel=1
+pkgdesc='Library for manipulation of TIFF images'
+arch=('x86_64')
+url='https://libtiff.gitlab.io/libtiff/'
+license=('libtiff')
+depends=('glibc' 'libstdc++' 'jbigkit' 'libdeflate' 'libjpeg-turbo' 'libjpeg.so' 'libwebp' 'xz' 'zlib' 'zstd')
+makedepends=('cmake' 'freeglut' 'glu' 'libglvnd' 'ninja')
+optdepends=('freeglut: for the Wayland tiffgt viewer')
+provides=("${_pkgname}=${pkgver}" 'libtiff.so' 'libtiffxx.so')
+conflicts=("${_pkgname}")
+source=("https://download.osgeo.org/libtiff/tiff-${pkgver}.tar.xz"
+        '0001-Use-GLVND-and-FreeGLUT-config-for-viewer.patch')
+sha256sums=('4996f0c4f93094719b1ca5c6279b20e588773ba8a247533e486416fb662ddb88' 'a227aba131d545a597f5b79e419cf7389f1dce6c198d78d5879636b68829e464')
+
+prepare() {
+  cd "tiff-${pkgver}"
+  patch -Np1 -i "${srcdir}/0001-Use-GLVND-and-FreeGLUT-config-for-viewer.patch"
+}
+
+build() {
+  local _cmake_options=(
+    -G Ninja
+    -D CMAKE_BUILD_TYPE=None
+    -D CMAKE_INSTALL_PREFIX=/usr
+    -D CMAKE_POLICY_VERSION_MINIMUM=3.5
+    -D BUILD_SHARED_LIBS=ON
+    -D tiff-static=OFF
+    -D tiff-tools=ON
+    -D tiff-tests=ON
+    -D tiff-opengl=ON
+    -D tiff-deprecated=OFF
+  )
+  cmake -S "tiff-${pkgver}" -B build "${_cmake_options[@]}"
+  cmake --build build --target all tiffgt --parallel "${NPROC:-2}"
+}
+
+check() {
+  ctest --test-dir build --output-on-failure
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+  install -Dm644 "tiff-${pkgver}/LICENSE.md" -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}

@@ -1,0 +1,33 @@
+pkgbase = libtiff-waypure
+	pkgdesc = Library for manipulation of TIFF images
+	pkgver = 4.7.2
+	pkgrel = 1
+	url = https://libtiff.gitlab.io/libtiff/
+	arch = x86_64
+	license = libtiff
+	makedepends = cmake
+	makedepends = freeglut
+	makedepends = glu
+	makedepends = libglvnd
+	makedepends = ninja
+	depends = glibc
+	depends = libstdc++
+	depends = jbigkit
+	depends = libdeflate
+	depends = libjpeg-turbo
+	depends = libjpeg.so
+	depends = libwebp
+	depends = xz
+	depends = zlib
+	depends = zstd
+	optdepends = freeglut: for the Wayland tiffgt viewer
+	provides = libtiff=4.7.2
+	provides = libtiff.so
+	provides = libtiffxx.so
+	conflicts = libtiff
+	source = https://download.osgeo.org/libtiff/tiff-4.7.2.tar.xz
+	source = 0001-Use-GLVND-and-FreeGLUT-config-for-viewer.patch
+	sha256sums = 4996f0c4f93094719b1ca5c6279b20e588773ba8a247533e486416fb662ddb88
+	sha256sums = a227aba131d545a597f5b79e419cf7389f1dce6c198d78d5879636b68829e464
+
+pkgname = libtiff-waypure
