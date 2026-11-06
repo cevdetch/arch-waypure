@@ -1,0 +1,112 @@
+Use GLVND OpenGL/EGL for Qt6 contexts and OpenCL sharing.
+Keep platform and device indices distinct when selecting a shared OpenCL device.
+
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -261,6 +261,9 @@
+ OCV_OPTION(WITH_OPENEXR "Include ILM support via OpenEXR" (WIN32 OR ANDROID OR APPLE) OR NOT CMAKE_CROSSCOMPILING
+   VISIBLE_IF NOT APPLE_FRAMEWORK AND NOT WINRT
+   VERIFY HAVE_OPENEXR)
++OCV_OPTION(WITH_EGL "Use EGL for OpenGL contexts" OFF
++  VISIBLE_IF UNIX AND NOT APPLE
++  VERIFY HAVE_EGL)
+ OCV_OPTION(WITH_OPENGL "Include OpenGL support" OFF
+   VISIBLE_IF NOT ANDROID AND NOT WINRT
+   VERIFY HAVE_OPENGL)
+--- a/cmake/OpenCVFindLibsGUI.cmake
++++ b/cmake/OpenCVFindLibsGUI.cmake
+@@ -64,7 +64,16 @@
+ ocv_clear_vars(HAVE_OPENGL HAVE_QT_OPENGL)
+ if(WITH_OPENGL)
+   if(WITH_WIN32UI OR (HAVE_QT AND QT_QTOPENGL_FOUND) OR HAVE_GTK3 OR (HAVE_GTK AND NOT HAVE_GTK3 AND HAVE_GTKGLEXT))
+-    find_package (OpenGL QUIET)
++    if(WITH_EGL)
++      find_package(OpenGL QUIET COMPONENTS OpenGL EGL)
++      if(NOT TARGET OpenGL::OpenGL OR NOT TARGET OpenGL::EGL)
++        message(FATAL_ERROR "EGL OpenGL support requires GLVND OpenGL and EGL")
++      endif()
++      set(OPENGL_LIBRARIES OpenGL::OpenGL OpenGL::EGL)
++      set(HAVE_EGL TRUE)
++    else()
++      find_package(OpenGL QUIET)
++    endif()
+     if(OPENGL_FOUND)
+       set(HAVE_OPENGL TRUE)
+       if(QT_QTOPENGL_FOUND)
+--- a/cmake/templates/cvconfig.h.in
++++ b/cmake/templates/cvconfig.h.in
+@@ -101,6 +101,7 @@
+ #cmakedefine HAVE_OPENEXR
+
+ /* OpenGL support*/
++#cmakedefine HAVE_EGL
+ #cmakedefine HAVE_OPENGL
+
+ /* PNG codec */
+--- a/modules/core/src/gl_core_3_1.cpp
++++ b/modules/core/src/gl_core_3_1.cpp
+@@ -127,6 +127,10 @@
+         #define CV_GL_GET_PROC_ADDRESS(name) AppleGLGetProcAddress(name)
+     #elif defined(__sgi) || defined(__sun)
+         #define CV_GL_GET_PROC_ADDRESS(name) SunGetProcAddress(name)
++    #elif defined(HAVE_EGL)
++        #include <EGL/egl.h>
++
++        #define CV_GL_GET_PROC_ADDRESS(name) eglGetProcAddress(name)
+     #else // GLX
+         #include <GL/glx.h>
+
+--- a/modules/core/src/opengl.cpp
++++ b/modules/core/src/opengl.cpp
+@@ -1593,7 +1593,7 @@
+ #endif // HAVE_OPENCL
+
+ #if defined(HAVE_OPENGL)
+-#  if defined(__ANDROID__)
++#  if defined(__ANDROID__) || defined(HAVE_EGL)
+ #    include <EGL/egl.h>
+ #  elif defined(__linux__)
+ #    include <GL/glx.h>
+@@ -1645,6 +1645,7 @@
+     cl_uint devCnt = 0;
+     cl_device_id* devices = nullptr;
+     cl_uint devUsed = 0;
++    cl_uint platformUsed = 0;
+     cl_context context = nullptr;
+
+     cl_int status = clGetPlatformIDs(0, NULL, &platformsCnt);
+@@ -1711,7 +1712,8 @@
+                                 devString.substr(oldPos, spacePos - oldPos).c_str())
+                                 == 0) {
+                             // Device supports context sharing with OpenGL
+-                            devUsed = i;
++                            devUsed = j;
++                            platformUsed = i;
+                             sharingSupported = true;
+                             break;
+                         }
+@@ -1741,6 +1743,15 @@
+                     0
+                 };
+                 context = clCreateContext(props, 0,0, NULL, NULL, &ciErrNum);
++#elif defined(HAVE_EGL)
++                cl_context_properties props[] =
++                {
++                    CL_GL_CONTEXT_KHR, (cl_context_properties)eglGetCurrentContext(),
++                    CL_EGL_DISPLAY_KHR, (cl_context_properties)eglGetCurrentDisplay(),
++                    CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[i],
++                    0
++                };
++                context = clCreateContext(props, 1, &devices[devUsed], NULL, NULL, &status);
+ #elif defined(__ANDROID__)
+                 cl_context_properties props[] =
+                 {
+@@ -1778,7 +1789,7 @@
+     }
+
+
+-    cl_platform_id platform = platforms[devUsed];
++    cl_platform_id platform = platforms[platformUsed];
+     std::string platformName = PlatformInfo(&platform).name();
+
+     OpenCLExecutionContext clExecCtx = OpenCLExecutionContext::create(platformName, platform, context, devices[devUsed]);

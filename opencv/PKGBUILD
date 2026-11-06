@@ -1,0 +1,173 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+
+pkgbase=opencv-waypure
+pkgname=('opencv-waypure' 'opencv-samples-waypure' 'python-opencv-waypure')
+pkgver=5.0.0
+pkgrel=1
+pkgdesc='Open Source Computer Vision Library with Qt6 and EGL'
+arch=('x86_64')
+url='https://opencv.org/'
+license=('Apache-2.0')
+depends=('abseil-cpp' 'cblas' 'ffmpeg' 'freetype2' 'glib2' 'glibc'
+         'gst-plugins-base' 'gst-plugins-base-libs' 'gstreamer' 'harfbuzz'
+         'lapack' 'libdc1394' 'libgcc' 'libglvnd' 'libjpeg-turbo' 'libjxl'
+         'libpng' 'libstdc++' 'libtiff' 'libwebp' 'openexr' 'openjpeg2'
+         'verdict' 'protobuf' 'onetbb' 'zlib')
+makedepends=('ant' 'cmake' 'eigen' 'fast_float' 'fmt' 'glu' 'hdf5'
+             'java-environment' 'lapacke' 'mesa' 'ninja' 'nlohmann-json'
+             'openmpi' 'pugixml' 'python-numpy' 'python-setuptools'
+             'qt6-base' 'qt6-5compat' 'vulkan-headers')
+optdepends=('opencv-samples: samples'
+            'qt6-base: Qt6 HighGUI windows'
+            'hdf5: HDF5 module'
+            'opencl-icd-loader: OpenCL acceleration'
+            'java-runtime: Java interface')
+source=('opencv-5.0.0.tar.gz::https://github.com/opencv/opencv/archive/refs/tags/5.0.0.tar.gz'
+        'opencv_contrib-5.0.0.tar.gz::https://github.com/opencv/opencv_contrib/archive/refs/tags/5.0.0.tar.gz'
+        'boostdesc-34e4206.tar.gz::https://github.com/opencv/opencv_3rdparty/archive/34e4206aef44d50e6bbcd0ab06354b52e7466d26.tar.gz'
+        'vggdesc-fccf7cd.tar.gz::https://github.com/opencv/opencv_3rdparty/archive/fccf7cd6a4b12079f73bbfb21745f9babcd4eb1d.tar.gz'
+        'wechat-a8b69cc.tar.gz::https://github.com/WeChatCV/opencv_3rdparty/archive/a8b69ccc738421293254aec5ddb38bd523503252.tar.gz'
+        'face_landmark_model.dat::https://raw.githubusercontent.com/opencv/opencv_3rdparty/8afa57abc8229d611c4937165d20e2a2d9fc5a12/face_landmark_model.dat'
+        'ade-v0.1.2e.zip::https://github.com/opencv/ade/archive/v0.1.2e.zip'
+        'WenQuanYiMicroHei.ttf.gz::https://raw.githubusercontent.com/vpisarev/opencv_3rdparty/cc7d85179d69a704bee209aa37ce8a657f2f8b34/WenQuanYiMicroHei.ttf.gz'
+        'fix-dnn-umat-dimensions.patch'
+        'ffmpeg-9.patch'
+        'sample-ptcloud.patch'
+        '0001-Use-EGL-for-OpenGL-contexts.patch'
+        '0002-Use-core-framebuffer-functions-with-EGL.patch'
+        '0003-Link-EGL-examples-with-GLU.patch')
+noextract=('ade-v0.1.2e.zip' 'WenQuanYiMicroHei.ttf.gz')
+sha256sums=('b0528f5a1d379d59d4701cb28c36e22214cc51cf64594e5b56f2d3e6c0233095'
+            'c58f6344170c39abf187c56f3843b59cab1fd3e89cf19ba2ce25dc061659b27f'
+            'd93c783cdf799da7e4a9209d169390424c4c198c1c9b5eeb78ffc890afe5f332'
+            'e9abccbabcace092e5424073168cc86d422585d15d25569f01fb6503b109e0e1'
+            '7a16ad6ca511c620c2a4cbef2c7cf1ff5c31bd530ac7b43ee2ea8481683df20a'
+            'eeab592db2861a6c94d592a48456cf59945d31483ce94a6bc4d3a4e318049ba3'
+            '3be62c864dcdd8b925e92f6a5b15a7a039819e04a6b3cf088827f08cf2cc07bf'
+            '70c5634fe8326a20a18f4d634d08c510f2c05f6613d2d5aa3566f162cc02804f'
+            'ade22d9c496e0afa4cb0f147cf54e6dd2c8f0edbac3bb6145209c7675bee7a4b'
+            '6246d08c2e272bc30bfcd8bc576e04504f238404823927f98f4def7d212eed74'
+            'a29f82b707956fc8ef994e3e5949f42f5787f9738ba711f4847437def9566f48'
+            '2fb00d7fbca2b340d6a39a09a4bb15b0cd4330eabebfac91cc1750042127b80c'
+            '6d8e0cec9fb36d90f148765b6b61a8fd3cdeb198e3324e76fce918887ea1d302'
+            '98b3b9f4b46226a67f88b307771d80eadf45d502910b55e2dcf61f93ee93d020')
+
+prepare() {
+  patch -d "opencv-${pkgver}" -Np1 -i "${srcdir}/sample-ptcloud.patch"
+  patch -d "opencv-${pkgver}" -Np1 -i "${srcdir}/fix-dnn-umat-dimensions.patch"
+  patch -d "opencv-${pkgver}" -Np1 -i "${srcdir}/ffmpeg-9.patch"
+  patch -d "opencv-${pkgver}" -Np1 -i "${srcdir}/0001-Use-EGL-for-OpenGL-contexts.patch"
+  patch -d "opencv_contrib-${pkgver}" -Np1 -i "${srcdir}/0002-Use-core-framebuffer-functions-with-EGL.patch"
+  patch -d "opencv-${pkgver}" -Np1 -i "${srcdir}/0003-Link-EGL-examples-with-GLU.patch"
+
+  # OpenCV verifies its own MD5s after makepkg verifies these source SHA256s.
+  local _id _file _hash
+  for _id in xfeatures2d/boostdesc xfeatures2d/vgg wechat_qrcode data ade unifont; do
+    case ${_id} in
+      xfeatures2d/boostdesc) local _files=(opencv_3rdparty-34e4206aef44d50e6bbcd0ab06354b52e7466d26/*.i) ;;
+      xfeatures2d/vgg) local _files=(opencv_3rdparty-fccf7cd6a4b12079f73bbfb21745f9babcd4eb1d/*.i) ;;
+      wechat_qrcode) local _files=(opencv_3rdparty-a8b69ccc738421293254aec5ddb38bd523503252/*.{caffemodel,prototxt}) ;;
+      data) local _files=(face_landmark_model.dat) ;;
+      ade) local _files=(ade-v0.1.2e.zip) ;;
+      unifont) local _files=(WenQuanYiMicroHei.ttf.gz) ;;
+    esac
+    for _file in "${_files[@]}"; do
+      read -r _hash _ < <(md5sum "${_file}")
+      local _filename=${_file##*/}
+      [[ ${_id} == ade ]] && _filename=v0.1.2e.zip
+      install -Dm644 "${_file}" "${srcdir}/.opencv-cache/${_id}/${_hash}-${_filename}"
+    done
+  done
+}
+
+build() {
+  export JAVA_HOME=/usr/lib/jvm/default
+  local _cmake_options=(
+    -G Ninja
+    -DCMAKE_BUILD_TYPE=None
+    -DCMAKE_INSTALL_PREFIX=/usr
+    -DCMAKE_DISABLE_FIND_PACKAGE_X11=ON
+    -DWITH_QT=6
+    -DWITH_EGL=ON
+    -DWITH_OPENGL=ON
+    -DOpenGL_GL_PREFERENCE=GLVND
+    -DWITH_GTK=OFF
+    -DWITH_WAYLAND=OFF
+    -DWITH_VTK=OFF
+    -DBUILD_opencv_viz=OFF
+    -DWITH_CUDA=OFF
+    -DWITH_CUDNN=OFF
+    -DWITH_IPP=OFF
+    -DWITH_OPENCL=ON
+    -DWITH_TBB=ON
+    -DWITH_VULKAN=ON
+    -DVULKAN_INCLUDE_DIRS=/usr/include
+    -DWITH_JPEGXL=ON
+    -DWITH_FFMPEG=ON
+    -DWITH_GSTREAMER=ON
+    -DWITH_UNIFONT=ON
+    -DBUILD_opencv_python3=ON
+    -DBUILD_opencv_java=ON
+    -DBUILD_TESTS=OFF
+    -DBUILD_PERF_TESTS=OFF
+    -DBUILD_EXAMPLES=ON
+    -DINSTALL_C_EXAMPLES=ON
+    -DINSTALL_PYTHON_EXAMPLES=ON
+    -DOPENCV_EXTRA_MODULES_PATH="${srcdir}/opencv_contrib-${pkgver}/modules"
+    -DOPENCV_DOWNLOAD_PATH="${srcdir}/.opencv-cache"
+    -DOPENCV_DOWNLOAD_TRIES_LIST=
+    -DOPENCV_SKIP_PYTHON_LOADER=ON
+    -DLAPACK_LIBRARIES='/usr/lib/liblapack.so;/usr/lib/libblas.so;/usr/lib/libcblas.so'
+    -DLAPACK_CBLAS_H=/usr/include/cblas.h
+    -DLAPACK_LAPACKE_H=/usr/include/lapacke.h
+    -DOPENCV_GENERATE_PKGCONFIG=ON
+    -DOPENCV_ENABLE_NONFREE=ON
+    -DOPENCV_JNI_INSTALL_PATH=lib
+    -DOPENCV_GENERATE_SETUPVARS=OFF
+    -DEIGEN_INCLUDE_PATH=/usr/include/eigen3
+    -Dprotobuf_MODULE_COMPATIBLE=ON
+    -DHDF5_NO_FIND_PACKAGE_CONFIG_FILE=ON
+    -DCPU_BASELINE_DISABLE=SSE3
+    -DCPU_BASELINE_REQUIRE=SSE2
+  )
+  cmake -S "opencv-${pkgver}" -B build "${_cmake_options[@]}"
+  [[ ! -s build/download_with_curl.sh ]]
+  grep -q '^#define HAVE_EGL' build/cvconfig.h
+  grep -q '^#define HAVE_OPENGL' build/cvconfig.h
+  cmake --build build --parallel "${NPROC:-$(nproc)}"
+}
+
+package_opencv-waypure() {
+  provides=("opencv=${pkgver}")
+  conflicts=('opencv')
+  DESTDIR="${pkgdir}" cmake --install build
+  mv "${pkgdir}/usr/share/opencv5/samples" "${srcdir}"
+  ln -sr "${pkgdir}"/usr/share/java/{opencv5/opencv-${pkgver//./},opencv}.jar
+  ln -sr "${pkgdir}"/usr/lib/{libopencv_java${pkgver//./},libopencv_java}.so
+  rm -r "${pkgdir}"/usr/lib/python3*
+}
+
+package_opencv-samples-waypure() {
+  pkgdesc='OpenCV samples'
+  arch=('any')
+  depends=("opencv-waypure=${pkgver}-${pkgrel}")
+  provides=("opencv-samples=${pkgver}")
+  conflicts=('opencv-samples')
+  optdepends=('python: Python examples'
+              'python-opencv: OpenCV bindings for Python examples'
+              'python-numpy: numerical arrays for Python examples'
+              'python-matplotlib: plotting for selected Python examples')
+  install -dm755 "${pkgdir}/usr/share/opencv5"
+  mv samples "${pkgdir}/usr/share/opencv5"
+}
+
+package_python-opencv-waypure() {
+  pkgdesc='Python bindings for OpenCV'
+  depends=('fmt' 'glibc' 'hdf5' 'jsoncpp' 'libgcc' 'libstdc++'
+           "opencv-waypure=${pkgver}-${pkgrel}" 'openmpi' 'pugixml'
+           'python-numpy' 'qt6-base')
+  provides=("python-opencv=${pkgver}")
+  conflicts=('python-opencv')
+  unset optdepends
+  DESTDIR="${pkgdir}" cmake --install build/modules/python3
+}

@@ -1,0 +1,21 @@
+Use the OpenGL 3.0/ARB framebuffer entry points exported by GLVND libOpenGL.
+Legacy EXT aliases are not exported by that library. Other platforms are unchanged.
+
+--- a/modules/rgbd/src/dynafu.cpp
++++ b/modules/rgbd/src/dynafu.cpp
+@@ -21,6 +21,15 @@
+ # include <windows.h>
+ #endif
+ # include <GL/gl.h>
++#endif
++
++#ifdef HAVE_EGL
++#define glGenFramebuffersEXT glGenFramebuffers
++#define glGenRenderbuffersEXT glGenRenderbuffers
++#define glBindRenderbufferEXT glBindRenderbuffer
++#define glBindFramebufferEXT glBindFramebuffer
++#define glFramebufferRenderbufferEXT glFramebufferRenderbuffer
++#define glRenderbufferStorageEXT glRenderbufferStorage
+ #endif
+
+ // GL Extention definitions missing from standard Win32 gl.h

@@ -1,0 +1,79 @@
+From a18356853d99a67e432e818cf0328b4690d68833 Mon Sep 17 00:00:00 2001
+From: Maitreyee Deshmukh <maitreyee721@gmail.com>
+Date: Mon, 15 Jun 2026 02:56:17 -0700
+Subject: [PATCH] Merge pull request #29293 from
+ MaitreyeeDeshmukh:fix/opengl-sample-ptcloud-missing-include
+
+fix: include ptcloud header and dependency for opengl_testdata_generator sample #29293
+
+## Summary
+Fixes the build failure in samples/opengl/opengl_testdata_generator.cpp on the 5.x
+branch when building with BUILD_EXAMPLES=ON.
+
+## Root cause
+The sample uses `loadMesh`, `TriangleShadingType`, and `TriangleCullingMode`, all
+declared in `modules/ptcloud/include/opencv2/ptcloud.hpp`. The sample did not
+include this header, and `samples/opengl/CMakeLists.txt` did not list
+`opencv_ptcloud` as a required dependency, so the ptcloud module headers/libs
+were not available when compiling this sample.
+
+## Changes
+- Added `#include "opencv2/ptcloud.hpp"` to opengl_testdata_generator.cpp
+- Added `opencv_ptcloud` to `OPENCV_OPENGL_SAMPLES_REQUIRED_DEPS` in
+  samples/opengl/CMakeLists.txt
+
+## Acceptance criteria
+- [x] opengl_testdata_generator.cpp compiles with BUILD_EXAMPLES=ON
+- [x] ptcloud module dependency declared so build system links it correctly
+
+Closes #29292
+---
+ samples/opengl/CMakeLists.txt                | 1 +
+ samples/opengl/opengl_testdata_generator.cpp | 7 ++++---
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/samples/opengl/CMakeLists.txt b/samples/opengl/CMakeLists.txt
+index b322d98d72ec..689a5517d938 100644
+--- a/samples/opengl/CMakeLists.txt
++++ b/samples/opengl/CMakeLists.txt
+@@ -14,6 +14,7 @@ SET(OPENCV_OPENGL_SAMPLES_REQUIRED_DEPS
+   opencv_imgproc
+   opencv_imgcodecs
+   opencv_geometry
++  opencv_ptcloud
+   opencv_videoio
+   opencv_highgui)
+ ocv_check_dependencies(${OPENCV_OPENGL_SAMPLES_REQUIRED_DEPS})
+diff --git a/samples/opengl/opengl_testdata_generator.cpp b/samples/opengl/opengl_testdata_generator.cpp
+index 2b88ea95a987..9ad422d01f06 100644
+--- a/samples/opengl/opengl_testdata_generator.cpp
++++ b/samples/opengl/opengl_testdata_generator.cpp
+@@ -20,6 +20,7 @@
+ #include "opencv2/imgproc.hpp"
+ #include "opencv2/highgui.hpp"
+ #include "opencv2/geometry.hpp"
++#include "opencv2/ptcloud.hpp"
+
+ using namespace std;
+ using namespace cv;
+@@ -510,17 +511,17 @@ int main(int argc, char* argv[])
+
+         for (const auto& res : resolutions)
+         {
+-            for (const auto shadingPair : shadingTxt)
++            for (const auto& shadingPair : shadingTxt)
+             {
+                 cv::TriangleShadingType shadingType = shadingPair.first;
+                 std::string shadingName = shadingPair.second;
+
+-                for (const auto cullingPair : cullingTxt)
++                for (const auto& cullingPair : cullingTxt)
+                 {
+                     cv::TriangleCullingMode cullingMode = cullingPair.first;
+                     std::string cullingName = cullingPair.second;
+
+-                    for (const auto modelPair : modelTxt)
++                    for (const auto& modelPair : modelTxt)
+                     {
+                         ModelType modelType = modelPair.first;
+                         std::string modelName = modelPair.second;
