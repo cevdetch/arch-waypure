@@ -1,0 +1,46 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+
+_pkgname=gavl
+pkgname=${_pkgname}-waypure
+pkgver=2.0.1
+pkgrel=1
+pkgdesc='Low level audio/video processing library with EGL and DRM support'
+arch=('x86_64')
+url='https://github.com/bplaum/gavl'
+license=('GPL-2.0-or-later')
+depends=('glibc' 'nettle' 'gnutls' 'libdrm' 'libglvnd' 'libva')
+makedepends=('doxygen' 'libpng')
+provides=("${_pkgname}=${pkgver}" 'libgavl.so')
+conflicts=("${_pkgname}")
+source=("${_pkgname}-${pkgver}.tar.gz::https://github.com/bplaum/gavl/archive/refs/tags/v${pkgver}.tar.gz"
+        'nettle4.patch'
+        '0001-Prefer-GLVND-OpenGL.patch')
+sha256sums=('5006f2dbe9f2bf5774b427b4e719475a6b2b0c1e22eb3c25b3315888d12abd70'
+            'd842ad4b3375ada8227566e0e9221a49d38246b8a8c44e328d1da36c0c2b0eaf'
+            'f2a7c3fb24cef2c089e13c6c349354c7d33f14f68546d3d85c65de80f6f1dcdb')
+
+prepare() {
+  cd "${_pkgname}-${pkgver}"
+  patch -Np1 -i "${srcdir}/nettle4.patch"
+  patch -Np1 -i "${srcdir}/0001-Prefer-GLVND-OpenGL.patch"
+  autoreconf -fi
+}
+
+build() {
+  cd "${_pkgname}-${pkgver}"
+  local _configure_options=(
+    --prefix=/usr
+    --sysconfdir=/etc
+    --localstatedir=/var
+    --with-cpuflags=none
+    --disable-static
+    --enable-libva
+  )
+  ./configure "${_configure_options[@]}"
+  make
+}
+
+package() {
+  cd "${_pkgname}-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+}

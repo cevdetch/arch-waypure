@@ -1,0 +1,26 @@
+pkgbase = gavl-waypure
+	pkgdesc = Low level audio/video processing library with EGL and DRM support
+	pkgver = 2.0.1
+	pkgrel = 1
+	url = https://github.com/bplaum/gavl
+	arch = x86_64
+	license = GPL-2.0-or-later
+	makedepends = doxygen
+	makedepends = libpng
+	depends = glibc
+	depends = nettle
+	depends = gnutls
+	depends = libdrm
+	depends = libglvnd
+	depends = libva
+	provides = gavl=2.0.1
+	provides = libgavl.so
+	conflicts = gavl
+	source = gavl-2.0.1.tar.gz::https://github.com/bplaum/gavl/archive/refs/tags/v2.0.1.tar.gz
+	source = nettle4.patch
+	source = 0001-Prefer-GLVND-OpenGL.patch
+	sha256sums = 5006f2dbe9f2bf5774b427b4e719475a6b2b0c1e22eb3c25b3315888d12abd70
+	sha256sums = d842ad4b3375ada8227566e0e9221a49d38246b8a8c44e328d1da36c0c2b0eaf
+	sha256sums = f2a7c3fb24cef2c089e13c6c349354c7d33f14f68546d3d85c65de80f6f1dcdb
+
+pkgname = gavl-waypure

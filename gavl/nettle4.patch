@@ -1,0 +1,38 @@
+From 5b776fe265810ff98f3a4e918d2afb0d337aa965 Mon Sep 17 00:00:00 2001
+From: Burkhard Plaum <burkhardplaum@gmail.com>
+Date: Sat, 28 Feb 2026 21:17:13 +0100
+Subject: [PATCH] Hopefully fixed compilation with nettle-4.x
+
+---
+ gavl/md5.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/gavl/md5.c b/gavl/md5.c
+index 3829589..18222cc 100644
+--- a/gavl/md5.c
++++ b/gavl/md5.c
+@@ -22,6 +22,8 @@
+ #include <gavl/gavl.h>
+ #include <gavl/utils.h>
+ #include <nettle/md5.h>
++#include <nettle/version.h>
++
+ #include <string.h>
+
+ void *
+@@ -30,7 +32,15 @@ gavl_md5_buffer(const void *buffer, int len, void *resblock)
+   struct md5_ctx ctx;
+   md5_init(&ctx);
+   md5_update(&ctx, len, buffer);
+-  md5_digest(&ctx, GAVL_MD5_SIZE, resblock);
++
++#if NETTLE_VERSION_MAJOR > 3
++    /* nettle >= 4.0 */
++    md5_digest(&ctx, resblock);
++#else
++    /* nettle 3.x */
++    md5_digest(&ctx, GAVL_MD5_SIZE, resblock);
++#endif
++
+   return resblock;
+   }

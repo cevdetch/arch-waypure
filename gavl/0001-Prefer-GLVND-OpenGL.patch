@@ -1,0 +1,11 @@
+--- a/m4/check_funcs.m4
++++ b/m4/check_funcs.m4
+@@ -83,7 +83,7 @@
+ OLD_LIBS=$LIBS
+
+ have_GL="true"
+-AC_SEARCH_LIBS([glBegin], [GL], [], AC_MSG_ERROR([OpenGL not found]), [])
++AC_SEARCH_LIBS([glBegin], [OpenGL GL], [], AC_MSG_ERROR([OpenGL not found]), [])
+
+ if test "x$have_GL" = "xtrue"; then
+ AC_LINK_IFELSE([AC_LANG_SOURCE([[#include <GL/gl.h>
