@@ -1,0 +1,57 @@
+# Maintainer: cevdetch (https://github.com/cevdetch)
+
+_pkgname=frei0r-plugins
+pkgname=${_pkgname}-waypure
+pkgver=3.6.0
+pkgrel=1
+pkgdesc='Collection of video effect plugins with Cairo, gavl and OpenCV support'
+arch=('x86_64')
+url='https://frei0r.dyne.org/'
+license=('GPL-2.0-or-later')
+depends=('cairo' 'gavl' 'glibc' 'libgcc' 'libglvnd' 'libstdc++' 'opencv')
+makedepends=('cmake' 'ninja')
+provides=("${_pkgname}=${pkgver}")
+conflicts=("${_pkgname}")
+source=("frei0r-${pkgver}.tar.gz::https://github.com/dyne/frei0r/archive/refs/tags/v${pkgver}.tar.gz"
+        'opencv-5.patch'
+        '0001-Use-GLVND-OpenGL-and-EGL-for-shadert0y.patch'
+        '0002-Order-pixs0r-random-block-height-bounds.patch'
+        '0003-Use-OpenCV5-default-cascade-path.patch')
+sha256sums=('425ddc9358151c52775a00b14e9dbd4044fc1f3aa931beef2aa3633707ba1eb8'
+            'ab535e8c7fd940f003ce2191603b677cfe5bbcbc0de3133547d596908bd939bf'
+            '7adbeaf4db4074e43034ecec7365897cfc209a0c1931689e2ce36c15011c4cd5'
+            '051b460ba9b24cf950f64b84af4924d3a96a570943da9ae1ea665be7778123e4'
+            'b0fb127d47c4452243e7aa6bae9eab6722b9721fe0b857f2ad45539251460acb')
+
+prepare() {
+  patch -d "frei0r-${pkgver}" -Np1 -i "${srcdir}/opencv-5.patch"
+  patch -d "frei0r-${pkgver}" -Np1 -i "${srcdir}/0001-Use-GLVND-OpenGL-and-EGL-for-shadert0y.patch"
+  patch -d "frei0r-${pkgver}" -Np1 -i "${srcdir}/0002-Order-pixs0r-random-block-height-bounds.patch"
+  patch -d "frei0r-${pkgver}" -Np1 -i "${srcdir}/0003-Use-OpenCV5-default-cascade-path.patch"
+}
+
+build() {
+  local _cmake_options=(
+    -G Ninja
+    -DCMAKE_BUILD_TYPE=None
+    -DCMAKE_INSTALL_PREFIX=/usr
+    -DCMAKE_DISABLE_FIND_PACKAGE_X11=ON
+    -DFREI0R_VERSION="${pkgver}"
+    -DWITHOUT_OPENCV=OFF
+    -DWITHOUT_FACERECOGNITION=OFF
+    -DWITHOUT_CAIRO=OFF
+    -DWITHOUT_GAVL=OFF
+    -DBUILD_TESTING=ON
+    -DTEST_GUI=OFF
+  )
+  cmake -S "frei0r-${pkgver}" -B build "${_cmake_options[@]}"
+  cmake --build build --parallel "${NPROC:-$(nproc)}"
+}
+
+check() {
+  ctest --test-dir build --output-on-failure --parallel "${NPROC:-$(nproc)}"
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+}

@@ -1,0 +1,30 @@
+pkgbase = frei0r-plugins-waypure
+	pkgdesc = Collection of video effect plugins with Cairo, gavl and OpenCV support
+	pkgver = 3.6.0
+	pkgrel = 1
+	url = https://frei0r.dyne.org/
+	arch = x86_64
+	license = GPL-2.0-or-later
+	makedepends = cmake
+	makedepends = ninja
+	depends = cairo
+	depends = gavl
+	depends = glibc
+	depends = libgcc
+	depends = libglvnd
+	depends = libstdc++
+	depends = opencv
+	provides = frei0r-plugins=3.6.0
+	conflicts = frei0r-plugins
+	source = frei0r-3.6.0.tar.gz::https://github.com/dyne/frei0r/archive/refs/tags/v3.6.0.tar.gz
+	source = opencv-5.patch
+	source = 0001-Use-GLVND-OpenGL-and-EGL-for-shadert0y.patch
+	source = 0002-Order-pixs0r-random-block-height-bounds.patch
+	source = 0003-Use-OpenCV5-default-cascade-path.patch
+	sha256sums = 425ddc9358151c52775a00b14e9dbd4044fc1f3aa931beef2aa3633707ba1eb8
+	sha256sums = ab535e8c7fd940f003ce2191603b677cfe5bbcbc0de3133547d596908bd939bf
+	sha256sums = 7adbeaf4db4074e43034ecec7365897cfc209a0c1931689e2ce36c15011c4cd5
+	sha256sums = 051b460ba9b24cf950f64b84af4924d3a96a570943da9ae1ea665be7778123e4
+	sha256sums = b0fb127d47c4452243e7aa6bae9eab6722b9721fe0b857f2ad45539251460acb
+
+pkgname = frei0r-plugins-waypure
