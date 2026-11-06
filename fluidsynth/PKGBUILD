@@ -5,7 +5,7 @@ _pkgname=fluidsynth
 _gcem=012ae73c6d0a2cb09ffe86475f5c6fba3926e200
 _basics=012d2be17b0eb6839628f8c73687c4ccccc1bb01
 pkgname=${_pkgname}-waypure
-pkgver=2.6.1
+pkgver=2.6.2
 pkgrel=1
 pkgdesc="A real-time software synthesizer based on the SoundFont 2 specifications"
 arch=('x86_64')
@@ -38,7 +38,7 @@ source=(
   "signalsmith-hilbert-1.0.0.tar.gz::https://github.com/Signalsmith-Audio/hilbert-iir/archive/refs/tags/1.0.0.tar.gz"
 )
 sha256sums=(
-  '3d258a3bf97cc20c59eeebfe62c2432fae88adda74d3ad098681c76e0ebf446b'
+  'ca376b42a3c1b186a4c8c248931789a455ac94a89b777394969d678010c2f91f'
   '34ab0ee87a9eb26d3087fa9b49c2572ea8ee03db0c9705b83648301a3a3fc172'
   '27af16f00c47abb498eb54bcbe52f6701bf970331f7d2e65731cf5264b202441'
   'b294471f1306baa4d968b230a8836924680e9ca068a667f4659259d66edbe9bc'
