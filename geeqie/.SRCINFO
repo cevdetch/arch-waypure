@@ -1,13 +1,15 @@
 pkgbase = geeqie-waypure
 	pkgdesc = Lightweight image viewer
-	pkgver = 3.3
+	pkgver = 3.4
 	pkgrel = 1
 	url = https://github.com/BestImageViewer/geeqie
 	arch = x86_64
 	license = GPL-2.0-or-later
 	checkdepends = appstream
 	checkdepends = desktop-file-utils
+	checkdepends = fbida
 	checkdepends = git
+	checkdepends = imagemagick
 	checkdepends = markdownlint
 	checkdepends = shellcheck
 	checkdepends = sway
@@ -53,10 +55,10 @@ pkgbase = geeqie-waypure
 	optdepends = perl-image-exiftool: for the jpeg extraction plugin
 	optdepends = gphoto2: command-line tools for various (plugin) operations
 	optdepends = imagemagick: command-line tools for various (plugin) operations
-	provides = geeqie=3.3
+	provides = geeqie=3.4
 	conflicts = geeqie
 	replaces = geeqie
-	source = https://github.com/BestImageViewer/geeqie/releases/download/v3.3/geeqie-3.3.tar.xz
-	sha256sums = 45ea0ef3c2b93b754e33763a1074673ab380e088d8217c28be3779423f56fe48
+	source = https://github.com/BestImageViewer/geeqie/releases/download/v3.4/geeqie-3.4.tar.xz
+	sha256sums = 11da7a988ffae5c531f011d1efc10f8bb700fd26dc5bec6d175e7722ea6658cc
 
 pkgname = geeqie-waypure
