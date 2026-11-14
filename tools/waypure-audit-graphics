@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+"""Inspect installed graphics stack providers and consumers."""
+from pathlib import Path
+import sys
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from optionkit.installed_stacks import main
+if __name__ == "__main__":
+    raise SystemExit(main("graphics"))

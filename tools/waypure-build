@@ -1,0 +1,459 @@
+#!/usr/bin/env python3
+"""waypure-build: build arch-waypure packages in dependency order."""
+from __future__ import annotations
+
+import argparse
+import concurrent.futures
+import json
+import os
+import shlex
+import subprocess
+import sys
+import threading
+from dataclasses import dataclass
+from pathlib import Path
+
+from optionkit.freshness import newer_inputs, package_artifacts
+from optionkit.linting import run_namcap
+from optionkit.alpm import BackendError, compare_versions, get_backend, reset_backend
+from optionkit.dependencies import bare_name, split_dependency, version_satisfies
+from optionkit.metadata import PackageInfo, SrcinfoError, find_pkgbuild_dirs, parse_srcinfo_text
+
+
+_CACHE_VERSION = 1
+_MAKEPKG_VERSION: str | None = None
+
+
+def _cache_file() -> Path:
+    return Path(os.environ.get(
+        "WAYPURE_CACHE",
+        str(Path.home() / ".cache" / "waypure-build" / "srcinfo.json")))
+
+
+def _current_makepkg_version() -> str:
+    global _MAKEPKG_VERSION
+    if _MAKEPKG_VERSION is None:
+        proc = subprocess.run(
+            ["makepkg", "--version"],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+        lines = proc.stdout.strip().splitlines() if proc.returncode == 0 else []
+        _MAKEPKG_VERSION = lines[0] if lines else "unknown"
+    return _MAKEPKG_VERSION
+
+
+def _load_cache() -> dict:
+    try:
+        data = json.loads(_cache_file().read_text())
+    except (OSError, ValueError):
+        return {"makepkg": _current_makepkg_version(), "entries": {}}
+    if (not isinstance(data, dict)
+            or data.get("makepkg") != _current_makepkg_version()
+            or not isinstance(data.get("entries"), dict)
+            or data.get("version") != _CACHE_VERSION):
+        return {"makepkg": _current_makepkg_version(), "entries": {}}
+    return data
+
+
+def _save_cache(cache: dict) -> None:
+    path = _cache_file()
+    entries = {k: v for k, v in cache["entries"].items()
+               if (Path(k) / "PKGBUILD").is_file()}
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(
+            {"version": _CACHE_VERSION, "makepkg": cache["makepkg"],
+             "entries": entries}))
+    except OSError as exc:
+        print(f"warning: cannot write cache: {exc}", file=sys.stderr)
+
+
+def parse_srcinfo(pkgdir: Path, cache: dict | None = None) -> PackageInfo:
+    key = str(pkgdir.resolve())
+    own_cache = cache is None
+    if own_cache:
+        cache = _load_cache()
+    try:
+        st = (pkgdir / "PKGBUILD").stat()
+    except OSError as exc:
+        raise SrcinfoError(f"{pkgdir}: cannot stat PKGBUILD: {exc}")
+    entry = cache["entries"].get(key)
+    if (isinstance(entry, dict)
+            and entry.get("mtime_ns") == st.st_mtime_ns
+            and entry.get("size") == st.st_size
+            and isinstance(entry.get("text"), str)):
+        text = entry["text"]
+    else:
+        proc = subprocess.run(
+            ["makepkg", "--printsrcinfo"], cwd=pkgdir,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if proc.returncode != 0:
+            raise SrcinfoError(
+                f"{pkgdir}: makepkg --printsrcinfo failed: {proc.stderr.strip()}")
+        text = proc.stdout
+        cache["entries"][key] = {
+            "mtime_ns": st.st_mtime_ns, "size": st.st_size, "text": text}
+    if own_cache:
+        _save_cache(cache)
+    return parse_srcinfo_text(text, pkgdir)
+
+
+def parse_all(dirs: list[Path], progress: bool = False) -> list[PackageInfo]:
+    cache = _load_cache()
+    total = len(dirs)
+    results: dict[Path, PackageInfo] = {}
+    done = [0]
+    lock = threading.Lock()
+
+    def one(pkgdir: Path) -> tuple[Path, PackageInfo]:
+        info = parse_srcinfo(pkgdir, cache)
+        if progress:
+            with lock:
+                done[0] += 1
+                print(f"parsing {pkgdir.name} ({done[0]}/{total})",
+                      file=sys.stderr)
+        return pkgdir, info
+
+    with concurrent.futures.ThreadPoolExecutor(
+            max_workers=min(8, max(1, total))) as pool:
+        for pkgdir, info in pool.map(one, dirs):
+            results[pkgdir] = info
+    _save_cache(cache)
+    return [results[d] for d in dirs]
+
+
+class DependencyError(ValueError):
+    pass
+
+
+@dataclass(frozen=True)
+class Provider:
+    directory: Path
+    version: str | None
+    concrete: bool
+
+
+def build_provides_map(infos: list[PackageInfo]) -> dict[str, list[Provider]]:
+    mapping: dict[str, list[Provider]] = {}
+    for info in sorted(infos, key=lambda i: i.dir.name):
+        for name in info.pkgnames:
+            candidates = mapping.setdefault(name, [])
+            duplicates = {candidate.directory.name for candidate in candidates
+                          if candidate.concrete and candidate.directory != info.dir}
+            if duplicates:
+                choices = ', '.join(sorted(duplicates | {info.dir.name}))
+                raise DependencyError(f'Duplicate package output {name}: {choices}; exclude unused recipes with --ignore')
+            candidates.append(Provider(info.dir, info.version, True))
+        for provision in info.provides:
+            try:
+                name, operator, version = split_dependency(provision)
+                if operator not in {None, '='}:
+                    raise ValueError('provisions only support an exact version')
+            except ValueError as error:
+                raise DependencyError(f'{info.dir.name}: invalid provision {provision!r}: {error}') from error
+            mapping.setdefault(name, []).append(Provider(info.dir, version, False))
+    return mapping
+
+
+def local_dep_dirs(info: PackageInfo, mapping: dict[str, list[Provider]]) -> set[Path]:
+    out: set[Path] = set()
+    for dep in info.depends + info.makedepends + info.checkdepends:
+        try:
+            name, operator, required = split_dependency(dep)
+        except ValueError as error:
+            raise DependencyError(f'{info.dir.name}: {error}') from error
+        candidates = mapping.get(name, [])
+        if not candidates:
+            continue
+        compatible = [candidate for candidate in candidates
+                      if version_satisfies(candidate.version, operator, required)]
+        concrete = [candidate for candidate in compatible if candidate.concrete]
+        targets = {candidate.directory for candidate in concrete or compatible}
+        if info.dir in targets:
+            continue
+        if not targets:
+            available = ', '.join(sorted({candidate.directory.name + ' (' +
+                                         (candidate.version or 'unversioned') + ')' for candidate in candidates}))
+            raise DependencyError(f'{info.dir.name}: no local provider satisfies {dep}; available: {available}; '
+                                  'exclude incompatible recipes with --ignore to use an external provider')
+        if len(targets) > 1:
+            choices = ', '.join(sorted(path.name for path in targets))
+            raise DependencyError(f'{info.dir.name}: ambiguous local providers for {dep}: {choices}; '
+                                  'exclude unused recipes with --ignore')
+        out.update(targets)
+    return out
+
+
+def dependency_graph(infos: list[PackageInfo]) -> dict[Path, set[Path]]:
+    mapping = build_provides_map(infos)
+    return {info.dir: local_dep_dirs(info, mapping) for info in infos}
+
+
+def topo_tiers(infos: list[PackageInfo], deps=None) -> list[list[PackageInfo]]:
+    by_dir = {i.dir: i for i in infos}
+    if deps is None:
+        deps = dependency_graph(infos)
+    # Tarjan SCC: mutual dependents (e.g. gtk3/gtk4/gstreamer) share a
+    # tier since no linear order exists for them. Deterministic: sorted
+    # edge traversal, tiers sorted by (level, dir name).
+    index_of: dict[Path, int] = {}
+    low: dict[Path, int] = {}
+    on_stack: set[Path] = set()
+    stack: list[Path] = []
+    sccs: list[set[Path]] = []
+    counter = [0]
+
+    def strongconnect(node: Path) -> None:
+        index_of[node] = low[node] = counter[0]
+        counter[0] += 1
+        stack.append(node)
+        on_stack.add(node)
+        for dep in sorted(deps[node]):
+            if dep not in index_of:
+                strongconnect(dep)
+                low[node] = min(low[node], low[dep])
+            elif dep in on_stack:
+                low[node] = min(low[node], index_of[dep])
+        if low[node] == index_of[node]:
+            comp: set[Path] = set()
+            while True:
+                member = stack.pop()
+                on_stack.discard(member)
+                comp.add(member)
+                if member == node:
+                    break
+            sccs.append(comp)
+
+    for info in infos:
+        if info.dir not in index_of:
+            strongconnect(info.dir)
+    for comp in sccs:
+        if len(comp) > 1:
+            print("warning: circular dependencies share one tier: "
+                  + ", ".join(sorted(p.name for p in comp)), file=sys.stderr)
+
+    comp_index = {d: n for n, comp in enumerate(sccs) for d in comp}
+    comp_deps: dict[int, set[int]] = {n: set() for n in range(len(sccs))}
+    for node, node_deps in deps.items():
+        for dep in node_deps:
+            if comp_index[dep] != comp_index[node]:
+                comp_deps[comp_index[node]].add(comp_index[dep])
+    comp_level: dict[int, int] = {}
+
+    def comp_visit(n: int) -> int:
+        if n in comp_level:
+            return comp_level[n]
+        depth = 0
+        for m in sorted(comp_deps[n]):
+            depth = max(depth, comp_visit(m) + 1)
+        comp_level[n] = depth
+        return depth
+
+    for n in comp_deps:
+        comp_visit(n)
+    tiers: dict[int, list[PackageInfo]] = {}
+    for n, comp in enumerate(sccs):
+        members = sorted((by_dir[d] for d in comp), key=lambda i: i.dir.name)
+        tiers.setdefault(comp_level[n], []).extend(members)
+    return [sorted(tiers[k], key=lambda i: i.dir.name)
+            for k in sorted(tiers)]
+
+
+def installed_version(pkgname: str) -> str | None:
+    package = get_backend().installed(names=(pkgname,)).get(pkgname)
+    return package.version if package else None
+
+
+def dirty_reason(info: PackageInfo) -> str | None:
+    for name in info.pkgnames:
+        inst = installed_version(name)
+        if inst is None:
+            return f"{name} not installed"
+        if compare_versions(inst, info.version) < 0:
+            return f"{name} installed {inst} < {info.version}"
+    for name in info.pkgnames:
+        artifacts = package_artifacts(info.dir, name, info.version)
+        if not artifacts:
+            return f"no built artifact for {name} {info.version}"
+        artifact = max(artifacts, key=lambda path: path.stat().st_mtime_ns)
+        if newer_inputs(info.dir, artifact):
+            return "sources newer than artifact"
+    return None
+
+
+def propagate_dirty(tiers: list[list[PackageInfo]], dirty: set[Path], deps=None) -> set[Path]:
+    infos = [i for tier in tiers for i in tier]
+    if deps is None:
+        deps = dependency_graph(infos)
+    rdeps: dict[Path, set[Path]] = {i.dir: set() for i in infos}
+    for info in infos:
+        for dep in deps[info.dir]:
+            rdeps[dep].add(info.dir)
+    grown = set(dirty)
+    queue = list(dirty)
+    while queue:
+        node = queue.pop()
+        for dependent in rdeps.get(node, ()):
+            if dependent not in grown:
+                grown.add(dependent)
+                queue.append(dependent)
+    return grown
+
+
+def build_dir(info: PackageInfo, makepkg_args: list[str], use_namcap: bool) -> bool:
+    def lint(path):
+        result = run_namcap(path)
+        for finding in result['findings']:
+            print(f"{finding['severity'].upper()} [{finding['code']}] {finding['message']}", file=sys.stderr)
+        return result['status'] in {'PASS', 'WARN'}
+
+    if use_namcap and not lint(info.dir/'PKGBUILD'):
+        return False
+    cmd = ["makepkg", "-si", "--noconfirm", *makepkg_args]
+    print(f"building {info.dir.name} ({info.version}): {' '.join(cmd)}")
+    proc = subprocess.run(cmd, cwd=info.dir)
+    reset_backend()
+    if proc.returncode != 0:
+        return False
+    if use_namcap:
+        for name in info.pkgnames:
+            artifacts = package_artifacts(info.dir, name, info.version)
+            if not artifacts:
+                print(f'ERROR: no current archive to lint for {name} {info.version}', file=sys.stderr)
+                return False
+            if not lint(max(artifacts, key=lambda path: path.stat().st_mtime_ns)):
+                return False
+    return True
+
+
+def _parse_args(argv: list[str] | None):
+    parser = argparse.ArgumentParser(
+        prog="waypure-build",
+        description="Build arch-waypure packages in dependency order.")
+    parser.add_argument("--repo", default=".",
+                        help="checkout path (default: cwd)")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--order-only", action="store_true")
+    mode.add_argument("--check", action="store_true")
+    parser.add_argument("--from", dest="from_pkg", default=None,
+                        help="resume at this dir name or pkgname")
+    parser.add_argument("--force", default="",
+                        help="comma-separated dir/pkg names to rebuild")
+    parser.add_argument("--ignore", default="",
+                        help="comma-separated dir/pkg names to skip, "
+                             'e.g. "ffmpeg,calibre" or "{ffmpeg,calibre}"')
+    parser.add_argument("--force-all", action="store_true")
+    parser.add_argument("--makepkg-args", default="",
+                        help='extra args, e.g. "--clean -L"')
+    parser.add_argument("--namcap", action="store_true", help='lint the trusted recipe before building and archives after makepkg; stop on lint errors')
+    parser.add_argument("-v", "--verbose", action="store_true")
+    return parser.parse_args(argv)
+
+
+def _match(name: str, info: PackageInfo) -> bool:
+    return name == info.dir.name or name in info.pkgnames
+
+
+def _split_list(raw: str) -> set[str]:
+    raw = raw.strip()
+    if raw.startswith("{") and raw.endswith("}"):
+        raw = raw[1:-1]
+    return {n.strip() for n in raw.split(",") if n.strip()}
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parse_args(argv)
+    reset_backend()
+    ignored = _split_list(args.ignore)
+    try:
+        all_dirs = find_pkgbuild_dirs(Path(args.repo))
+        skipped = {d.name for d in all_dirs if d.name in ignored}
+        infos = parse_all(
+            [d for d in all_dirs if d.name not in ignored], progress=True)
+    except SrcinfoError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    dropped = {i.dir for i in infos
+               if any(n in ignored for n in i.pkgnames)}
+    if skipped or dropped:
+        ignored_names = skipped | {bare_name(name) for info in infos if info.dir in dropped
+                                   for name in info.pkgnames + info.provides}
+        warned: set[tuple[Path, str]] = set()
+        for info in sorted(infos, key=lambda i: i.dir.name):
+            if info.dir in dropped:
+                continue
+            for dep in info.depends + info.makedepends + info.checkdepends:
+                name = bare_name(dep)
+                if ((name in ignored_names)
+                        and (info.dir, name) not in warned):
+                    warned.add((info.dir, name))
+                    print(f"warning: {info.dir.name}: local dep {name} "
+                          f"ignored, treating as external", file=sys.stderr)
+        infos = [i for i in infos if i.dir not in dropped]
+    if not infos:
+        if skipped or dropped:
+            print("error: all packages ignored, nothing to do",
+                  file=sys.stderr)
+        else:
+            print("error: no PKGBUILD dirs found", file=sys.stderr)
+        return 1
+    try:
+        deps = dependency_graph(infos)
+        tiers = topo_tiers(infos, deps=deps)
+    except (DependencyError, BackendError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    flat = [i for tier in tiers for i in tier]
+
+    if args.order_only:
+        for number, tier in enumerate(tiers):
+            print(f"tier {number}: {' '.join(i.dir.name for i in tier)}")
+        return 0
+
+    forced = _split_list(args.force)
+    dirty: dict[Path, str] = {}
+    for info in flat:
+        try:
+            reason = dirty_reason(info)
+        except BackendError as error:
+            print(f'error: {error}', file=sys.stderr)
+            return 1
+        if reason is None and (args.force_all or any(_match(n, info) for n in forced)):
+            reason = "forced"
+        if reason is not None:
+            dirty[info.dir] = reason
+    for path in sorted(propagate_dirty(tiers, set(dirty), deps=deps) - set(dirty)):
+        dirty[path] = "dependency rebuilt"
+
+    if args.check:
+        for info in flat:
+            if info.dir in dirty:
+                print(f"DIRTY {info.dir.name}: {dirty[info.dir]}")
+            else:
+                print(f"FRESH {info.dir.name}")
+        return 0
+
+    started = args.from_pkg is None
+    for info in flat:
+        if not started:
+            if _match(args.from_pkg, info):
+                started = True
+            else:
+                continue
+        if info.dir not in dirty:
+            print(f"SKIP {info.dir.name} (fresh)")
+            continue
+        extra = shlex.split(args.makepkg_args) if args.makepkg_args else []
+        if not build_dir(info, extra, args.namcap):
+            print(f"FAILED {info.dir.name}; resume with: "
+                  f"waypure-build --repo {args.repo} --from {info.dir.name}",
+                  file=sys.stderr)
+            return 2
+    if not started:
+        print(f"error: --from {args.from_pkg!r} matched no package",
+              file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

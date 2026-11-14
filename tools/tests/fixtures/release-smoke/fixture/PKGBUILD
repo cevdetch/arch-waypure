@@ -1,0 +1,22 @@
+# Maintainer: arch-waypure contributors
+pkgname=waypure-validation-smoke-waypure
+pkgver=1.0
+pkgrel=1
+pkgdesc='Synthetic fixture for clean-chroot release validation'
+arch=('any')
+url='https://github.com/cevdetch/arch-waypure'
+license=('MIT')
+provides=('waypure-validation-smoke')
+conflicts=('waypure-validation-smoke')
+source=('LICENSE' 'message.txt')
+sha256sums=('23518a5241dc42afa18f99defdf277199df0818687e599fc4e989c02e576661c' '769bc7ee5b139a47f98b6865b82b03afd932038bcef6e4c914c454e7647389b1')
+
+check() {
+  printf '%s\n' 'check() ran' > "$srcdir/check-passed"
+}
+
+package() {
+  test -f "$srcdir/check-passed" || return 1
+  install -Dm644 message.txt "$pkgdir/usr/share/waypure-validation-smoke/message.txt"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

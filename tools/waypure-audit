@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+"""Audit the packaging checkout; explicit --namcap also evaluates trusted recipes."""
+
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from optionkit.repository import main
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+"""Install the toolkit under a prefix without Python package-manager state."""
+
+import argparse
+import hashlib
+import os
+from pathlib import Path
+import shutil
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--prefix", type=Path, default=Path.home() / ".local")
+    args = parser.parse_args()
+    source = Path(__file__).resolve().parent
+    prefix = args.prefix.expanduser().resolve()
+    library = prefix / "lib/arch-waypure"
+    if library.is_relative_to(source):
+        parser.error("the installation prefix must be outside the tools source directory")
+    commands = ("waypure-options", "qt6-options", "ffmpeg-options", "waypure-audit",
+                "waypure-build", "waypure-versions", "waypure-remove-x11", "waypure-validate", "waypure-chroot",
+                "waypure-audit-audio", "waypure-audit-graphics", "waypure-audit-x11")
+    binaries = prefix / "bin"
+    for name in commands:
+        link = binaries / name
+        if link.exists() and not link.is_symlink() and not link.is_file():
+            parser.error(f"{link} is not a regular command file; refusing to replace it")
+    library.mkdir(parents=True, exist_ok=True)
+    for name in commands:
+        link = binaries / name
+        if link.is_file() and not link.is_symlink():
+            contents = link.read_bytes()
+            backup = library / "backups" / (name + '.' + hashlib.sha256(contents).hexdigest() + '.bak')
+            backup.parent.mkdir(parents=True, exist_ok=True)
+            if backup.exists() and backup.read_bytes() != contents:
+                parser.error(f"{backup} differs from the command backup; refusing to replace it")
+            if not backup.exists():
+                backup.write_bytes(contents)
+                shutil.copystat(link, backup)
+            print(f"Backup: {backup}")
+    shutil.copytree(source / "optionkit", library / "optionkit", dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    binaries.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source / "waypure-policy.toml", library / "waypure-policy.toml")
+    for name in commands:
+        target = library / name
+        shutil.copy2(source / name, target)
+        target.chmod(0o755)
+    for name in commands:
+        link = binaries / name
+        if link.exists() or link.is_symlink():
+            link.unlink()
+        link.symlink_to(os.path.relpath(library / name, binaries))
+        print(link)
+    retired = {"build-options": "waypure-options", "omg-better-clean.sh": "waypure-versions",
+               "remove-x11.sh": "waypure-remove-x11"}
+    for name, command in retired.items():
+        link = binaries / name
+        if link.is_symlink() and Path(os.path.abspath(link.parent / link.readlink())) in {
+                library / name, library / command}:
+            link.unlink()
+            print(f"Removed retired command: {link}")
+        obsolete = library / name
+        if obsolete.is_file() or obsolete.is_symlink():
+            obsolete.unlink()
+            print(f"Removed obsolete copy: {obsolete}")
+
+
+if __name__ == "__main__":
+    main()

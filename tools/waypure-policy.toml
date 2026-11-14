@@ -1,0 +1,182 @@
+# Known package and ELF families. Native build flags remain in PKGBUILDs.
+# The audit strips dependency versions, lib32- and an exact -waypure suffix.
+# ELF names are case-sensitive. These lists cannot identify arbitrary static
+# protocol implementations, renamed private libraries or every dlopen path.
+
+# WAYLAND: Xlib, XCB, X extensions, legacy toolkits and X-specific protocols.
+# https://www.x.org/guide/client-ecosystem/
+# Generic helpers (libxkbcommon, libxcvt, libfontenc, libxshmfence), shared
+# headers (xorgproto), EGL and OpenGL are not inherently X11 dependencies.
+[dependencies]
+forbidden = [
+  "libx11", "libxcb", "libxcb-*", "xcb-util*", "xcb-imdkit",
+  "libxau", "libxdmcp", "libxext", "libxrender", "libxfixes",
+  "libxrandr", "libxcursor", "libxi", "libxinerama", "libxdamage",
+  "libxcomposite", "libxss", "libxtst", "libxpresent", "libxres",
+  "libxv", "libxvmc", "libxxf86vm", "libxxf86dga", "libxxf86misc",
+  "libxevie", "libxtrap", "libxfontcache", "libdmx",
+  "libxt", "libxmu", "libxaw", "xaw3d", "libxaw3d",
+  "motif", "openmotif", "lesstif", "libxol",
+  "libxfont", "libxfont2", "libxft", "libxpm", "libxp",
+  "libxprintutil", "libxprintapputil", "libfs", "libice", "libsm",
+  "libxkbcommon-x11", "libxkbfile", "libxkbui", "libxklavier", "libxnvctrl",
+  "egl-x11", "libglx", "libglx-*", "qt5-x11extras",
+  "python-xlib", "python-xcffib", "python-xpyb",
+  "xdotool", "libfakekey", "libkeybinder", "libkeybinder3", "keybinder", "keybinder3",
+  "libwnck", "libwnck3", "startup-notification",
+  "libvdpau",
+  "xorg-server", "xorg-server-*", "xorg-xwayland", "x-server", "x-abi-*",
+  "xf86-input-*", "xf86-video-*",
+]
+
+[paths]
+forbidden = [
+  "usr/bin/Xwayland", "usr/bin/Xorg", "usr/lib/Xorg",
+  "usr/lib/libX11.a", "usr/lib32/libX11.a",
+  "usr/lib/libX11-xcb.a", "usr/lib32/libX11-xcb.a",
+  "usr/lib/libxcb.a", "usr/lib32/libxcb.a",
+  "usr/lib/libxcb-*.a", "usr/lib32/libxcb-*.a",
+]
+
+[libraries]
+forbidden = [
+  "libX11.so*", "libX11-xcb.so*", "libxcb.so*", "libxcb-*.so*",
+  "libXau.so*", "libXdmcp.so*", "libXext.so*", "libXrender.so*",
+  "libXfixes.so*", "libXrandr.so*", "libXcursor.so*", "libXi.so*",
+  "libXinerama.so*", "libXdamage.so*", "libXcomposite.so*", "libXss.so*",
+  "libXtst.so*", "libXpresent.so*", "libXRes.so*",
+  "libXv.so*", "libXvMC.so*", "libXvMCW.so*",
+  "libXxf86vm.so*", "libXxf86dga.so*", "libXxf86misc.so*",
+  "libXevie.so*", "libXTrap.so*", "libXfontcache.so*", "libdmx.so*",
+  "libXt.so*", "libXmu.so*", "libXmuu.so*",
+  "libXaw.so*", "libXaw[0-9]*.so*", "libXaw3d.so*",
+  "libXm.so*", "libMrm.so*", "libUil.so*", "libXol.so*",
+  "libXfont.so*", "libXfont2.so*", "libXft.so*", "libXpm.so*", "libXp.so*",
+  "libXprintUtil.so*", "libXprintAppUtil.so*", "libFS.so*", "libICE.so*", "libSM.so*",
+  "libxkbcommon-x11.so*", "libxkbfile.so*", "libxkbui.so*", "libxklavier.so*", "libXNVCtrl.so*",
+  "libGLX.so*", "libGLX_*.so*", "libnvidia-egl-xcb.so*", "libnvidia-egl-xlib.so*",
+  "libQt5X11Extras.so*", "libQt[56]XcbQpa.so*", "libqxcb.so*",
+  "libgtk-x11-*.so*", "libgdk-x11-*.so*",
+  "libxdo.so*", "libfakekey.so*", "libkeybinder.so*", "libkeybinder-*.so*",
+  "libwnck-*.so*", "libstartup-notification-1.so*",
+  "libvdpau.so*", "libvdpau_trace.so*",
+]
+
+# PIPEWIRE: prefer a supported native backend; otherwise use the application's
+# best-supported PulseAudio client or ALSA backend through pipewire-pulse or
+# pipewire-alsa. Upstream supports both without prescribing a universal order.
+# https://github.com/PipeWire/pipewire/blob/master/INSTALL.md
+# JACK is excluded by repository choice, including PipeWire compatibility,
+# bridge and netJACK implementations. Keep JACK disabled in native build flags
+# as well: dependency/ELF checks alone cannot prove a backend was not compiled.
+[pipewire.dependencies]
+forbidden = [
+  "jack", "jack2", "jack2-*", "jack-*", "libjack", "libjack-*", "qjackctl",
+  "pipewire-jack", "pipewire-jack-*", "pipewire-netjack*",
+  "pulseaudio", "pulseaudio-bluetooth",
+  "pulseaudio-equalizer", "pulseaudio-jack", "pulseaudio-lirc",
+  "pulseaudio-rtp", "pulseaudio-zeroconf",
+]
+
+[pipewire.paths]
+forbidden = [
+  "usr/bin/pw-jack",
+  "usr/lib/libjack.a", "usr/lib32/libjack.a",
+  "usr/lib/libjackserver.a", "usr/lib32/libjackserver.a",
+  "usr/lib/libjacknet.a", "usr/lib32/libjacknet.a",
+]
+
+[pipewire.libraries]
+forbidden = [
+  "libjack.so*", "libjacknet.so*", "libjackserver.so*",
+  "libspa-jack.so*", "libasound_module_pcm_jack.so*",
+  "libpipewire-module-jack-*.so*", "libpipewire-module-jackdbus-*.so*",
+  "libpipewire-module-netjack*.so*",
+  "libpulsecore-*.so*",
+]
+
+# Do not ban libpulse*, libasound*, libpipewire*, pulseaudio-qt, the
+# pulseaudio-alsa client configuration or pulse-native-provider: those can
+# use PipeWire. Bundled JACK plugins still fail the ELF rules. Server
+# selection, ALSA device selection and service activation need runtime checks.
+
+# Additional X11 cleanup candidates: tools/data, not audit dependency bans.
+# Audio policy is deliberately outside waypure-remove-x11's scope.
+[cleanup]
+extra = [
+  "xev",
+  "xorg-appres",
+  "xorg-bdftopcf",
+  "xorg-docs",
+  "xorg-font-util",
+  "xorg-fonts-100dpi",
+  "xorg-fonts-75dpi",
+  "xorg-fonts-alias-100dpi",
+  "xorg-fonts-alias-75dpi",
+  "xorg-fonts-alias-cyrillic",
+  "xorg-fonts-alias-misc",
+  "xorg-fonts-cyrillic",
+  "xorg-fonts-encodings",
+  "xorg-fonts-misc",
+  "xorg-fonts-type1",
+  "xorg-fonttosfnt",
+  "xorg-iceauth",
+  "xorg-mkfontscale",
+  "xorg-oclock",
+  "xorg-sessreg",
+  "xorg-setxkbmap",
+  "xorg-smproxy",
+  "xorg-twm",
+  "xorg-util-macros",
+  "xorg-x11perf",
+  "xorg-xauth",
+  "xorg-xbacklight",
+  "xorg-xbiff",
+  "xorg-xcalc",
+  "xorg-xclipboard",
+  "xorg-xclock",
+  "xorg-xcmsdb",
+  "xorg-xconsole",
+  "xorg-xcursorgen",
+  "xorg-xdm",
+  "xorg-xdpyinfo",
+  "xorg-xdriinfo",
+  "xorg-xedit",
+  "xorg-xev",
+  "xorg-xeyes",
+  "xorg-xfd",
+  "xorg-xfontsel",
+  "xorg-xgamma",
+  "xorg-xhost",
+  "xorg-xinit",
+  "xorg-xinput",
+  "xorg-xkbcomp",
+  "xorg-xkbevd",
+  "xorg-xkbprint",
+  "xorg-xkbutils",
+  "xorg-xkill",
+  "xorg-xload",
+  "xorg-xlogo",
+  "xorg-xlsatoms",
+  "xorg-xlsclients",
+  "xorg-xlsfonts",
+  "xorg-xmag",
+  "xorg-xman",
+  "xorg-xmessage",
+  "xorg-xmodmap",
+  "xorg-xpr",
+  "xorg-xprop",
+  "xorg-xrandr",
+  "xorg-xrdb",
+  "xorg-xrefresh",
+  "xorg-xset",
+  "xorg-xsetroot",
+  "xorg-xvidtune",
+  "xorg-xvinfo",
+  "xorg-xwd",
+  "xorg-xwininfo",
+  "xorg-xwud",
+  "xcb-proto",
+  "qt5-xcb-private-headers",
+  "qt6-xcb-private-headers",
+]

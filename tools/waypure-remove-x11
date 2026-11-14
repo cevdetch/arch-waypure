@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: waypure-remove-x11 [--apply] [--policy FILE]
+
+List installed cleanup candidates from waypure-policy.toml.
+The default only previews package names. --apply invokes pacman -Rns,
+retaining dependency checks and pacman's interactive confirmation.
+
+  --apply         Request removal of the listed installed packages
+  --policy FILE   Use another policy file
+  -h, --help      Show this help
+USAGE
+}
+
+fail() {
+  printf 'waypure-remove-x11: %s\n' "$*" >&2
+  exit 2
+}
+
+apply=0
+policy_file=''
+while (($#)); do
+  case "$1" in
+    --apply) apply=1; shift ;;
+    --policy)
+      [[ -n ${2:-} ]] || fail '--policy requires a file'
+      policy_file=$2
+      shift 2
+      ;;
+    -h|--help) usage; exit 0 ;;
+    *) fail "unknown argument: $1" ;;
+  esac
+done
+
+command -v python3 >/dev/null || fail 'Python 3.11 or newer is required'
+script_dir=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
+if [[ -z $policy_file ]]; then
+  policy_file=$script_dir/waypure-policy.toml
+fi
+
+if ! policy_patterns=$(python3 - "$policy_file" <<'PY'
+from pathlib import Path
+import sys
+import tomllib
+
+try:
+    policy = tomllib.loads(Path(sys.argv[1]).read_text())
+    sections = [policy.get('dependencies'), policy.get('cleanup', {})]
+    if not all(isinstance(section, dict) for section in sections):
+        raise ValueError('dependencies and cleanup must be tables')
+    groups = [sections[0].get('forbidden'), sections[1].get('extra', [])]
+    for values in groups:
+        if not isinstance(values, list) or not all(
+                isinstance(value, str) and value and not value.startswith('-')
+                and not any(character.isspace() for character in value) for value in values):
+            raise ValueError('dependencies.forbidden and cleanup.extra must contain package names/patterns')
+    for pattern in dict.fromkeys(value for values in groups for value in values):
+        print(pattern)
+except (OSError, ValueError) as error:
+    print('waypure-remove-x11: ' + str(error), file=sys.stderr)
+    sys.exit(2)
+PY
+); then
+  exit 2
+fi
+mapfile -t patterns <<< "$policy_patterns"
+
+installed=$(python3 "$script_dir/optionkit/alpm.py" installed-names) || fail 'could not query installed packages'
+candidates=()
+while IFS= read -r package; do
+  [[ -n $package && $package != *-waypure ]] || continue
+  for pattern in "${patterns[@]}"; do
+    # Policy entries deliberately include shell glob patterns.
+    # shellcheck disable=SC2053
+    if [[ $package == $pattern || ${package#lib32-} == $pattern ]]; then
+      candidates+=("$package")
+      break
+    fi
+  done
+done <<< "$installed"
+
+if ((${#candidates[@]} == 0)); then
+  printf 'No installed packages match the cleanup policy.\n'
+  exit 0
+fi
+printf 'Installed cleanup candidates:\n'
+printf '  %s\n' "${candidates[@]}"
+if ((apply == 0)); then
+  printf '\nPreview only. Use --apply to request removal with pacman.\n'
+  exit 0
+fi
+
+command -v pacman >/dev/null || fail 'pacman is required for removal'
+removal=(pacman -Rns)
+if [[ -n ${WAYPURE_PACMAN_CONFIG:-} ]]; then
+  removal+=(--config "$WAYPURE_PACMAN_CONFIG")
+fi
+removal+=(-- "${candidates[@]}")
+if ((EUID != 0)); then
+  removal=(sudo "${removal[@]}")
+fi
+exec "${removal[@]}"
