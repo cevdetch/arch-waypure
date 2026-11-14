@@ -1,0 +1,133 @@
+name: Packaging tools
+
+on:
+  push:
+    paths: ['tools/**', '*/PKGBUILD', '*/.SRCINFO', '*/*.patch', '.github/workflows/packaging-tools.yml']
+  pull_request:
+    paths: ['tools/**', '*/PKGBUILD', '*/.SRCINFO', '*/*.patch', '.github/workflows/packaging-tools.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '${{ matrix.python }}'
+      - name: Install native inspection tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y build-essential git cmake meson ninja-build binutils zstd shellcheck cargo rustc
+      - name: Test collectors and maintenance commands
+        run: python -B -m unittest discover -s tools/tests -v
+      - name: Check shell commands
+        run: |
+          bash -n tools/waypure-remove-x11
+          shellcheck tools/waypure-remove-x11
+      - name: Audit changed package metadata
+        if: matrix.python == '3.13'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import re
+          import subprocess
+          base = os.environ.get('BASE_SHA', '')
+          if re.fullmatch(r'[0-9a-f]{40}', base) and set(base) != {'0'}:
+              command = ['git', 'diff', '--name-only', '-z', base, 'HEAD', '--']
+          else:
+              command = ['git', 'diff-tree', '--root', '--no-commit-id', '--name-only', '-z', '-r', 'HEAD']
+          changes = subprocess.check_output(command, text=True).split('\0')
+          packages = set()
+          for change in changes:
+              path = Path(change)
+              if len(path.parts) == 2 and (path.name in {'PKGBUILD', '.SRCINFO'} or path.suffix == '.patch'):
+                  if (Path(path.parts[0]) / 'PKGBUILD').is_file():
+                      packages.add(path.parts[0])
+          if packages:
+              subprocess.run(['python', 'tools/waypure-audit', '--repo', '.', '--metadata-only', '--', *sorted(packages)], check=True)
+          else:
+              print('No changed package recipes or patches.')
+          PY
+
+  alpm:
+    runs-on: ubuntu-24.04
+    container: archlinux:base-devel
+    steps:
+      - name: Install native ALPM runtime
+        run: pacman -Syu --noconfirm python pyalpm git
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test real ALPM queries with temporary databases
+        run: python -B -m unittest discover -s tools/tests -p test_alpm.py -v
+
+  release-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    container:
+      image: archlinux:base-devel
+      # Native devtools uses mount namespaces and systemd-nspawn.
+      options: --privileged
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Install native release tools
+        run: pacman -Syu --noconfirm devtools namcap python pyalpm git sudo opendoas
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Prepare isolated build user and clean baseline
+        run: |
+          useradd --create-home validator
+          printf '%s\n' 'permit nopass validator as root' > /etc/doas.conf
+          chmod 0400 /etc/doas.conf
+          chown -R validator:validator "$GITHUB_WORKSPACE"
+          mkarchroot -C /usr/share/devtools/pacman.conf.d/extra.conf \
+            -M /usr/share/devtools/makepkg.conf.d/x86_64.conf \
+            /var/lib/archbuild/extra-x86_64/root base-devel
+      - name: Validate fixture with native archbuild and doas
+        run: |
+          sudo -u validator python -B tools/waypure-validate \
+            --repo tools/tests/fixtures/release-smoke \
+            --builder extra-x86_64-build --auth doas \
+            --chroot /var/lib/archbuild/extra-x86_64 fixture
+      - name: Verify native receipt and archive provenance
+        run: |
+          python -B - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          root = Path('tools/tests/fixtures/release-smoke/fixture')
+          receipt = json.loads((root / '.waypure-validation.json.log').read_text())
+          assert receipt['status'] == 'PASS'
+          assert receipt['builder'] == 'extra-x86_64-build'
+          assert receipt['auth'] == 'doas'
+          source_hash = hashlib.sha256((root / 'PKGBUILD').read_bytes()).hexdigest()
+          assert receipt['artifacts']
+          for artifact in receipt['artifacts']:
+              assert artifact['pkgbuild_sha256sum'] == source_hash
+              assert hashlib.sha256(Path(artifact['path']).read_bytes()).hexdigest() == artifact['sha256']
+          PY
+      - name: Retain validation receipts, archives and logs
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: release-smoke
+          path: tools/tests/fixtures/release-smoke/fixture/.waypure-validation*
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
