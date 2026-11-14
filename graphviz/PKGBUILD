@@ -3,7 +3,7 @@
 
 _pkgname=graphviz
 pkgname=${_pkgname}-waypure
-pkgver=16.1.0
+pkgver=16.1.1
 pkgrel=1
 pkgdesc='Graph visualization tools and libraries without X11'
 arch=('x86_64')
@@ -26,7 +26,7 @@ provides=("${_pkgname}=${pkgver}")
 conflicts=("${_pkgname}")
 install=graphviz.install
 source=("https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/${pkgver}/${_pkgname}-${pkgver}.tar.gz")
-sha256sums=('beea483ab130f456c1c3905f4f2e40778a9c493c3d73ae8012367d552d71ca84')
+sha256sums=('42806c79271e286028b9422c7016b0368ad86beb381aa46d1d8c720f69ce3fc7')
 
 build() {
   local _configure_options=(
