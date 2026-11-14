@@ -96,6 +96,8 @@ jobs:
           printf '%s\n' 'permit nopass validator as root' > /etc/doas.conf
           chmod 0400 /etc/doas.conf
           chown -R validator:validator "$GITHUB_WORKSPACE"
+          # mkarchroot resolves the root with readlink -f, which needs the parent.
+          mkdir -p /var/lib/archbuild/extra-x86_64
           mkarchroot -C /usr/share/devtools/pacman.conf.d/extra.conf \
             -M /usr/share/devtools/makepkg.conf.d/x86_64.conf \
             /var/lib/archbuild/extra-x86_64/root base-devel
