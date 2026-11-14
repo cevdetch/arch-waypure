@@ -362,7 +362,9 @@ class MaintenanceCase(unittest.TestCase):
             findings = report['packages'][0]['findings']
             self.assertEqual(result.returncode, 1 if enabled == 'ON' else 0, findings)
             if enabled == 'ON':
-                self.assertTrue(any(item['code'] == 'build.x11' and 'libX11.so.6' in item['message']
+                # CMake may rewrite a missing absolute library path as -lX11.
+                self.assertTrue(any(item['code'] == 'build.x11' and
+                                    ('libX11.so.6' in item['message'] or '-lX11' in item['message'])
                                     for item in findings), findings)
                 self.assertTrue(any(item['code'] == 'build.pipewire' and '-ljack' in item['message']
                                     for item in findings), findings)

@@ -451,7 +451,7 @@ AC_ARG_ENABLE([present], [AS_HELP_STRING([--enable-present], [Supported feature]
 AC_MSG_NOTICE([present=$enable_present])
 AC_OUTPUT
 ''')
-        subprocess.run(['autoconf'], cwd=self.source, check=True, capture_output=True, text=True)
+        subprocess.run(['autoconf', '--force'], cwd=self.source, check=True, capture_output=True, text=True)
         for flags, effective in (('--enable-present\n enable_present=no', 'no'),
                                  ('enable_present=no\n --enable-present', 'yes')):
             with self.subTest(flags=flags):
@@ -479,7 +479,7 @@ AC_ARG_ENABLE([present.api], [AS_HELP_STRING([--enable-present.api], [Supported 
 AC_MSG_NOTICE([present=$enable_present_api])
 AC_OUTPUT
 ''')
-        subprocess.run(['autoconf'], cwd=self.source, check=True, capture_output=True, text=True)
+        subprocess.run(['autoconf', '--force'], cwd=self.source, check=True, capture_output=True, text=True)
         self.run_tool('review')
         output = self.run_tool('render', '1.0').stdout
         result = subprocess.run(['bash', '-c', output + '\nsh "$1" "${_make_options[@]}"', 'bash', str(self.source/'configure')],

@@ -340,7 +340,7 @@ AC_ARG_ENABLE([driver], [AS_HELP_STRING([--enable-driver], [Driver])], [], [enab
     def test_source_predictions_and_pruned_flags_match_native_configure(self):
         output = self.review(PLATFORM + 'AC_MSG_NOTICE([capture=$enable_v4l proxy=$enable_proxy bktr=$enable_bktr])\n',
                              '--disable-v4l\n--disable-proxy')
-        subprocess.run(['autoconf'], cwd=self.source, check=True, capture_output=True, text=True)
+        subprocess.run(['autoconf', '--force'], cwd=self.source, check=True, capture_output=True, text=True)
         for label, array in (('original', '_make_options=(--disable-v4l --disable-proxy)\n'),
                              ('proposal', output)):
             directory = self.root/label
