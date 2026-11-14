@@ -1,6 +1,6 @@
 pkgbase = gstreamer-waypure
 	pkgdesc = Multimedia graph framework
-	pkgver = 1.28.8
+	pkgver = 1.28.9
 	pkgrel = 1
 	url = https://gstreamer.freedesktop.org/
 	arch = x86_64
@@ -133,13 +133,11 @@ pkgbase = gstreamer-waypure
 	makedepends = zlib
 	makedepends = zvbi
 	makedepends = zxing-cpp
-	source = https://gitlab.freedesktop.org/gstreamer/gstreamer/-/archive/1.28.8/gstreamer-1.28.8.tar.gz
+	source = https://gitlab.freedesktop.org/gstreamer/gstreamer/-/archive/1.28.9/gstreamer-1.28.9.tar.gz
 	source = 0001-HACK-meson-Disable-broken-tests.patch
-	source = 0002-faac-support-faac-2.0-faac_-API.patch
 	source = 0003-synaescope-handle-empty-bins.patch
-	sha256sums = fd146dc03ea55ccfe78c1a91d35b71f20089209e173163f98237aad9f5ec7540
-	sha256sums = 1e4e6624d78dd79a7e57a24f3d6fdb3a58f14241f779cff0d6447f0ab13bb2c2
-	sha256sums = a7ca7bc1b9d22296991f993d45a10b0789cb26ed0809a4f9c32c80f044fc83b8
+	sha256sums = 0fdecabb02f170b78251f7b9f1b5092073f52e70ba06c92df53fe36745041db6
+	sha256sums = 81ce6dabcdcc84d8830d9740fd84da356e6a72fdab0a2db5ccf73a078dfc508d
 	sha256sums = a88228af586eba1f2cf2e427cfa24ee538bd5a45a5da7563f3a8116783cfebfc
 
 pkgname = gstreamer-waypure
@@ -156,8 +154,8 @@ pkgname = gstreamer-waypure
 
 pkgname = gst-plugins-bad-libs-waypure
 	pkgdesc = Multimedia graph framework - bad
-	depends = gst-plugins-base-libs-waypure=1.28.8-1
-	depends = gstreamer-waypure=1.28.8-1
+	depends = gst-plugins-base-libs-waypure=1.28.9-1
+	depends = gstreamer-waypure=1.28.9-1
 	depends = glib2
 	depends = glibc
 	depends = libdrm
@@ -178,7 +176,7 @@ pkgname = gst-plugins-bad-libs-waypure
 
 pkgname = gst-plugins-base-libs-waypure
 	pkgdesc = Multimedia graph framework - base
-	depends = gstreamer-waypure=1.28.8-1
+	depends = gstreamer-waypure=1.28.9-1
 	depends = glib2
 	depends = glibc
 	depends = graphene
@@ -195,8 +193,8 @@ pkgname = gst-plugins-base-libs-waypure
 
 pkgname = gst-plugins-base-waypure
 	pkgdesc = Multimedia graph framework - base plugins
-	depends = gst-plugins-base-libs-waypure=1.28.8-1
-	depends = gstreamer-waypure=1.28.8-1
+	depends = gst-plugins-base-libs-waypure=1.28.9-1
+	depends = gstreamer-waypure=1.28.9-1
 	depends = alsa-lib
 	depends = cairo
 	depends = cdparanoia
@@ -211,8 +209,8 @@ pkgname = gst-plugins-base-waypure
 
 pkgname = gst-plugins-good-waypure
 	pkgdesc = Multimedia graph framework - good plugins
-	depends = gst-plugins-base-libs-waypure=1.28.8-1
-	depends = gstreamer-waypure=1.28.8-1
+	depends = gst-plugins-base-libs-waypure=1.28.9-1
+	depends = gstreamer-waypure=1.28.9-1
 	depends = bzip2
 	depends = cairo
 	depends = flac
@@ -247,9 +245,9 @@ pkgname = gst-plugins-good-waypure
 
 pkgname = gst-plugins-bad-waypure
 	pkgdesc = Multimedia graph framework - bad plugins
-	depends = gst-plugins-bad-libs-waypure=1.28.8-1
-	depends = gst-plugins-base-libs-waypure=1.28.8-1
-	depends = gstreamer-waypure=1.28.8-1
+	depends = gst-plugins-bad-libs-waypure=1.28.9-1
+	depends = gst-plugins-base-libs-waypure=1.28.9-1
+	depends = gstreamer-waypure=1.28.9-1
 	depends = aom
 	depends = bzip2
 	depends = cairo
@@ -315,13 +313,13 @@ pkgname = gst-plugins-bad-waypure
 	depends = zvbi
 	depends = zxing-cpp
 	optdepends = gst-plugin-va: VA-API hardware decoding and encoding
-	provides = gst-plugin-svthevcenc=1.28.8
+	provides = gst-plugin-svthevcenc=1.28.9
 	conflicts = gst-plugin-svthevcenc
 
 pkgname = gst-plugins-ugly-waypure
 	pkgdesc = Multimedia graph framework - ugly plugins
-	depends = gst-plugins-base-libs-waypure=1.28.8-1
-	depends = gstreamer-waypure=1.28.8-1
+	depends = gst-plugins-base-libs-waypure=1.28.9-1
+	depends = gstreamer-waypure=1.28.9-1
 	depends = a52dec
 	depends = glib2
 	depends = glibc
@@ -331,18 +329,18 @@ pkgname = gst-plugins-ugly-waypure
 
 pkgname = gst-libav-waypure
 	pkgdesc = Multimedia graph framework - libav plugin
-	depends = gst-plugins-base-libs-waypure=1.28.8-1
-	depends = gstreamer-waypure=1.28.8-1
+	depends = gst-plugins-base-libs-waypure=1.28.9-1
+	depends = gstreamer-waypure=1.28.9-1
 	depends = ffmpeg
 	depends = glib2
 	depends = glibc
-	provides = gst-ffmpeg=1.28.8
+	provides = gst-ffmpeg=1.28.9
 
 pkgname = gst-plugin-va-waypure
 	pkgdesc = Multimedia graph framework - va plugin
-	depends = gst-plugins-bad-libs-waypure=1.28.8-1
-	depends = gst-plugins-base-libs-waypure=1.28.8-1
-	depends = gstreamer-waypure=1.28.8-1
+	depends = gst-plugins-bad-libs-waypure=1.28.9-1
+	depends = gst-plugins-base-libs-waypure=1.28.9-1
+	depends = gstreamer-waypure=1.28.9-1
 	depends = glib2
 	depends = glibc
 	depends = libgudev
