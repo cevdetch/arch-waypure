@@ -32,6 +32,14 @@ build() {
     --enable-libxml2
     --without-x
     --disable-gl
+    # GPU discovery components autodetect the host OpenCL/CUDA/ROCm stack;
+    # this host's ocl-icd pulled the OpenCL plugin in with an undeclared
+    # ocl-icd dependency. Pin them off to match the validated chroot build.
+    --disable-opencl
+    --disable-cuda
+    --disable-nvml
+    --disable-rsmi
+    --disable-levelzero
     # configure probes X headers even with --without-x.
     ac_cv_header_X11_Xlib_h=no
   )
