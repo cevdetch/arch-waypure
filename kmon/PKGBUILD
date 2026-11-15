@@ -19,6 +19,9 @@ sha256sums=('fd8e02c17089e88c2b019e116e0b7fdd9fe4285327bd795de90622aba4b79469'
 
 prepare() {
   cd "${_pkgname}-${pkgver}"
+  # Re-extracting sources overwrites patched files but leaves files the
+  # patch only creates behind, which then fails the create hunk; clear it.
+  rm -f src/clipboard.rs
   patch -Np1 -i ../selectable-clipboard-backends.patch
   cargo fetch --locked --target "$(rustc --print host-tuple)"
 }
