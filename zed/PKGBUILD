@@ -3,7 +3,7 @@
 
 _pkgname=zed
 pkgname=${_pkgname}-waypure
-pkgver=1.25.2
+pkgver=1.28.1
 pkgrel=1
 pkgdesc="A Wayland-native code editor without calls or live collaboration"
 arch=('x86_64')
@@ -46,8 +46,8 @@ source=(
   "${url}/archive/v${pkgver}/${_pkgname}-${pkgver}.tar.gz"
   wayland-local-only.patch
 )
-sha256sums=('130215b2213bd839cfba673292be84ec4ad0ca0dcc19f44232b9a94c22cc8449'
-            '97c92ea568994667aac9778bbeff55269e12318fc29100b476df40b6f6914f7f')
+sha256sums=('2baab0ae5fdbbdd64cf69afbc4fd3f4427dc86b9a8a4dfd2335a949097741226'
+            '48a6a7b3a4b63fec350d4c0f0844f3e795b206789e8fbd4f20e852e072e5f8ed')
 
 _binname=zeditor
 _appid=dev.zed.Zed
@@ -89,7 +89,8 @@ _srcenv() {
 prepare() {
 	_srcenv
 	patch -Np1 -i "${srcdir}/wayland-local-only.patch"
-	cargo fetch --locked --target host-tuple
+	# cargo-about resolves every platform before applying --target.
+	cargo fetch --locked
 	export DO_STARTUP_NOTIFY="true"
 	export APP_ICON="zed"
 	export APP_NAME="Zed"
@@ -133,9 +134,13 @@ build() {
 	export PROTOC_INCLUDE=/usr/include
 	cargo build "${_cargo_options[@]}"
 	cargo build "${_cli_cargo_options[@]}"
-	target/release/cli --completions bash > completions.bash
-	target/release/cli --completions fish > completions.fish
-	target/release/cli --completions zsh > completions.zsh
+	# Completions are bound to the invoked name, so generate them as zeditor.
+	cp target/release/cli "target/release/${_binname}"
+	"target/release/${_binname}" --completions bash > completions.bash
+	"target/release/${_binname}" --completions elvish > completions.elvish
+	"target/release/${_binname}" --completions fish > completions.fish
+	"target/release/${_binname}" --completions nushell > completions.nushell
+	"target/release/${_binname}" --completions zsh > completions.zsh
 }
 
 check() {
@@ -157,6 +162,10 @@ check() {
 	_cli_version=$(target/release/cli --version)
 	if [[ ${_cli_version} != "Zed ${pkgver} ${ZED_COMMIT_SHA} "* ]]; then
 		printf '%s\n' "Unexpected editor version: ${_cli_version}" >&2
+		return 1
+	fi
+	if ! grep -qx "#compdef ${_binname}" completions.zsh || grep -q 'complete -c cli ' completions.fish; then
+		printf '%s\n' "Shell completions are not bound to ${_binname}" >&2
 		return 1
 	fi
 	python - <<'PY'
@@ -194,7 +203,9 @@ package() {
 	install -Dm0644 -t "${pkgdir}/usr/share/metainfo/" "${_appid}.metainfo.xml"
 	install -Dm0644 crates/zed/resources/app-icon.png "${pkgdir}/usr/share/icons/hicolor/512x512/apps/${_pkgname}.png"
 	install -Dm0644 completions.bash "${pkgdir}/usr/share/bash-completion/completions/${_binname}"
+	install -Dm0644 completions.elvish "${pkgdir}/usr/share/elvish/lib/${_binname}.elv"
 	install -Dm0644 completions.fish "${pkgdir}/usr/share/fish/vendor_completions.d/${_binname}.fish"
+	install -Dm0644 completions.nushell "${pkgdir}/usr/share/nushell/vendor/autoload/${_binname}.nu"
 	install -Dm0644 completions.zsh "${pkgdir}/usr/share/zsh/site-functions/_${_binname}"
 	install -Dm0644 cli-licenses.md "${pkgdir}/usr/share/licenses/${pkgname}/cli-licenses.md"
 }

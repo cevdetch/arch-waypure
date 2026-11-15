@@ -7,7 +7,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
 
 --- a/Cargo.lock
 +++ b/Cargo.lock
-@@ -10124,10 +10124,8 @@
+@@ -10131,10 +10131,8 @@
   "settings",
   "simplelog",
   "smallvec",
@@ -18,7 +18,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
   "zed-scap",
  ]
  
-@@ -15299,7 +15297,6 @@
+@@ -15278,7 +15276,6 @@
   "dasp_sample",
   "hound",
   "num-rational",
@@ -26,20 +26,20 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
   "symphonia",
   "thiserror 2.0.17",
  ]
-@@ -15415,12 +15412,6 @@
-  "libc",
-  "windows-sys 0.52.0",
+@@ -15396,12 +15393,6 @@
  ]
--
--[[package]]
--name = "rtrb"
--version = "0.3.2"
--source = "registry+https://github.com/rust-lang/crates.io-index"
--checksum = "ad8388ea1a9e0ea807e442e8263a699e7edcb320ecbcd21b4fa8ff859acce3ba"
  
  [[package]]
+-name = "rtrb"
+-version = "0.3.5"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "fae8ee26b0371a29a77d2b2d6b3ae13aa81def6f9bf1b1b92a32d279a5e709b7"
+-
+-[[package]]
  name = "runtimelib"
-@@ -22423,7 +22414,6 @@
+ version = "1.4.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+@@ -22396,7 +22387,6 @@
   "client",
   "clock",
   "codestral",
@@ -47,7 +47,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
   "collections",
   "command_palette",
   "component_preview",
-@@ -22498,7 +22488,6 @@
+@@ -22471,7 +22461,6 @@
   "parking_lot",
   "paths",
   "picker",
@@ -57,7 +57,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
   "project",
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -452,7 +452,7 @@
+@@ -455,7 +455,7 @@
  remote_server = { path = "crates/remote_server" }
  repl = { path = "crates/repl" }
  reqwest_client = { path = "crates/reqwest_client" }
@@ -68,7 +68,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
  sandbox = { path = "crates/sandbox" }
 --- a/assets/keymaps/default-linux.json
 +++ b/assets/keymaps/default-linux.json
-@@ -923,7 +923,6 @@
+@@ -944,7 +944,6 @@
    {
      "context": "!Terminal",
      "bindings": {
@@ -76,7 +76,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
      },
    },
    {
-@@ -1186,34 +1185,6 @@
+@@ -1207,34 +1206,6 @@
      },
    },
    {
@@ -111,22 +111,22 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
      "context": "CallHierarchyPicker > Picker > Editor",
      "bindings": {
        "ctrl-k ctrl-h": "call_hierarchy::ToggleDirection",
-@@ -1239,12 +1210,6 @@
-     "context": "LspCommandSelector > Picker > Editor",
-     "bindings": {
-       "tab": "lsp_command_selector::ToggleArgumentsFocus",
--    },
--  },
--  {
--    "context": "ChannelModal > Picker > Editor",
--    "bindings": {
--      "tab": "channel_modal::ToggleMode",
+@@ -1263,12 +1234,6 @@
      },
    },
    {
+-    "context": "ChannelModal > Picker > Editor",
+-    "bindings": {
+-      "tab": "channel_modal::ToggleMode",
+-    },
+-  },
+-  {
+     "context": "ToolchainSelector",
+     "use_key_equivalents": true,
+     "bindings": {
 --- a/assets/keymaps/default-macos.json
 +++ b/assets/keymaps/default-macos.json
-@@ -967,7 +967,6 @@
+@@ -988,7 +988,6 @@
      "bindings": {
        "ctrl-alt-cmd-f": "workspace::FollowNextCollaborator",
        // TODO: Move this to a dock open action
@@ -134,7 +134,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
        // Only available in debug builds: opens an element inspector for development.
        "cmd-alt-i": "dev::ToggleInspector",
        // Cycles the frame-time debug overlay between hidden, frame-time-only, and detailed modes.
-@@ -1231,38 +1230,6 @@
+@@ -1252,38 +1251,6 @@
      },
    },
    {
@@ -173,23 +173,23 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
      "context": "CallHierarchyPicker > Picker > Editor",
      "use_key_equivalents": true,
      "bindings": {
-@@ -1292,13 +1259,6 @@
-     "use_key_equivalents": true,
-     "bindings": {
-       "tab": "lsp_command_selector::ToggleArgumentsFocus",
--    },
--  },
--  {
+@@ -1316,13 +1283,6 @@
+     },
+   },
+   {
 -    "context": "ChannelModal > Picker > Editor",
 -    "use_key_equivalents": true,
 -    "bindings": {
 -      "tab": "channel_modal::ToggleMode",
-     },
-   },
-   {
+-    },
+-  },
+-  {
+     "context": "ToolchainSelector",
+     "use_key_equivalents": true,
+     "bindings": {
 --- a/assets/keymaps/default-windows.json
 +++ b/assets/keymaps/default-windows.json
-@@ -923,7 +923,6 @@
+@@ -944,7 +944,6 @@
      "context": "!Terminal",
      "use_key_equivalents": true,
      "bindings": {
@@ -197,7 +197,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
      },
    },
    {
-@@ -1188,38 +1187,6 @@
+@@ -1209,38 +1208,6 @@
      },
    },
    {
@@ -236,20 +236,20 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
      "context": "CallHierarchyPicker > Picker > Editor",
      "use_key_equivalents": true,
      "bindings": {
-@@ -1248,13 +1215,6 @@
-     "use_key_equivalents": true,
-     "bindings": {
-       "tab": "lsp_command_selector::ToggleArgumentsFocus",
--    },
--  },
--  {
+@@ -1272,13 +1239,6 @@
+     },
+   },
+   {
 -    "context": "ChannelModal > Picker > Editor",
 -    "use_key_equivalents": true,
 -    "bindings": {
 -      "tab": "channel_modal::ToggleMode",
-     },
-   },
-   {
+-    },
+-  },
+-  {
+     "context": "ToolchainSelector",
+     "use_key_equivalents": true,
+     "bindings": {
 --- a/crates/audio/Cargo.toml
 +++ b/crates/audio/Cargo.toml
 @@ -29,5 +29,5 @@
@@ -272,12 +272,10 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
  pub enum Sound {
 --- a/crates/audio/src/audio_pipeline.rs
 +++ b/crates/audio/src/audio_pipeline.rs
-@@ -124,41 +124,6 @@
- 
-         Ok(source)
+@@ -126,41 +126,6 @@
      }
--}
--
+ }
+ 
 -pub fn open_input_stream(
 -    device_id: Option<DeviceId>,
 -) -> anyhow::Result<rodio::microphone::Microphone> {
@@ -311,9 +309,11 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
 -        .open_stream()?;
 -    log::info!("Opened microphone: {:?}", stream.config());
 -    Ok(stream)
- }
- 
+-}
+-
  pub fn resolve_device(device_id: Option<&DeviceId>, input: bool) -> anyhow::Result<cpal::Device> {
+     if let Some(id) = device_id {
+         if let Some(device) = default_host().device_by_id(id) {
 --- a/crates/audio/src/audio_pipeline/echo_canceller.rs
 +++ b/crates/audio/src/audio_pipeline/echo_canceller.rs
 @@ -1,4 +1,8 @@
@@ -694,7 +694,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
          ai_page(cx),
          network_page(),
          developer_page(cx),
-@@ -6892,77 +6890,6 @@
+@@ -6906,77 +6904,6 @@
          ]
      }
  
@@ -772,7 +772,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
      fn agent_panel_section() -> [SettingsPageItem; 7] {
          [
              SettingsPageItem::SectionHeader("Agent Panel"),
-@@ -7109,7 +7036,6 @@
+@@ -7123,7 +7050,6 @@
              outline_panel_section(),
              git_panel_section(),
              debugger_panel_section(),
@@ -780,7 +780,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
              agent_panel_section(),
          ],
      }
-@@ -8623,108 +8549,33 @@
+@@ -8637,108 +8563,33 @@
      }
  }
  
@@ -941,10 +941,10 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
 +gpui.workspace = true
  icons.workspace = true
  livekit_client.workspace = true
- project.workspace = true
+ path.workspace = true
 --- a/crates/title_bar/src/title_bar.rs
 +++ b/crates/title_bar/src/title_bar.rs
-@@ -352,8 +352,6 @@
+@@ -361,8 +361,6 @@
                  .into_any_element(),
          );
  
@@ -953,7 +953,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
          if title_bar_settings.show_onboarding_banner {
              if let Some(banner) = &self.banner {
                  children.push(banner.clone().into_any_element())
-@@ -381,7 +379,6 @@
+@@ -390,7 +388,6 @@
                  .pr_1()
                  .gap_1()
                  .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
@@ -1034,9 +1034,9 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
 -    }
 -
      if cfg!(target_os = "macos") {
-         println!("cargo:rustc-env=MACOSX_DEPLOYMENT_TARGET=10.15.7");
+         println!("cargo:rustc-env=MACOSX_DEPLOYMENT_TARGET=12.0");
  
-@@ -46,6 +25,7 @@
+@@ -44,6 +23,7 @@
          std::env::var("TARGET").unwrap()
      );
  
@@ -1149,7 +1149,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
      } else if let Some(task) = task {
 --- a/crates/zed/src/zed.rs
 +++ b/crates/zed/src/zed.rs
-@@ -780,8 +780,6 @@
+@@ -781,8 +781,6 @@
          let outline_panel = OutlinePanel::load(workspace_handle.clone(), cx.clone());
          let terminal_panel = TerminalPanel::load(workspace_handle.clone(), cx.clone());
          let git_panel = GitPanel::load(workspace_handle.clone(), cx.clone());
@@ -1158,7 +1158,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
          let debug_panel = DebugPanel::load(workspace_handle.clone(), cx);
  
          async fn add_panel_when_ready(
-@@ -804,7 +802,6 @@
+@@ -805,7 +803,6 @@
              add_panel_when_ready(outline_panel, workspace_handle.clone(), cx.clone()),
              add_panel_when_ready(terminal_panel, workspace_handle.clone(), cx.clone()),
              add_panel_when_ready(git_panel, workspace_handle.clone(), cx.clone()),
@@ -1166,7 +1166,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
              add_panel_when_ready(debug_panel, workspace_handle.clone(), cx.clone()),
              initialize_agent_panel(workspace_handle.clone(), cx.clone()).map(|r| r.log_err()),
          );
-@@ -1317,14 +1314,6 @@
+@@ -1318,14 +1315,6 @@
          )
          .register_action(
              |workspace: &mut Workspace,
@@ -1181,7 +1181,7 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
               _: &terminal_panel::ToggleFocus,
               window: &mut Window,
               cx: &mut Context<Workspace>| {
-@@ -6177,7 +6166,7 @@
+@@ -6483,7 +6472,7 @@
              release_channel::init(Version::new(0, 0, 0), cx);
              command_palette::init(cx);
              editor::init(cx);
@@ -1207,14 +1207,14 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
      ];
 --- a/script/generate-licenses
 +++ b/script/generate-licenses
-@@ -2,18 +2,8 @@
+@@ -2,19 +2,9 @@
  
  set -euo pipefail
  
 -CARGO_ABOUT_VERSION="0.8.2"
  OUTPUT_FILE="${1:-$(pwd)/assets/licenses.md}"
  TEMPLATE_FILE="script/licenses/template.md.hbs"
--
+ 
 -fail_on_stderr() {
 -    local tmpfile=$(mktemp)
 -    "$@" 2> >(tee "$tmpfile" >&2)
@@ -1223,9 +1223,10 @@ Omit obsolete WebRTC library search paths and honor release commit metadata.
 -    rm "$tmpfile"
 -    return $rc
 -}
- 
+-
  echo -n "" >"$OUTPUT_FILE"
  
+ {
 @@ -27,18 +17,12 @@
      echo -e "\n# ###### CODE LICENSES ######\n"
  } >>"$OUTPUT_FILE"

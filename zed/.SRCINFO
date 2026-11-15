@@ -1,6 +1,6 @@
 pkgbase = zed-waypure
 	pkgdesc = A Wayland-native code editor without calls or live collaboration
-	pkgver = 1.25.2
+	pkgver = 1.28.1
 	pkgrel = 1
 	url = https://github.com/zed-industries/zed
 	arch = x86_64
@@ -32,15 +32,15 @@ pkgbase = zed-waypure
 	depends = wayland
 	depends = zstd
 	optdepends = org.freedesktop.secrets: to keep you logged into your Zed account
-	provides = zed=1.25.2
+	provides = zed=1.28.1
 	conflicts = zed
 	replaces = zed
 	replaces = zed-editor
 	options = !debug
-	source = https://github.com/zed-industries/zed/archive/v1.25.2/zed-1.25.2.tar.gz
+	source = https://github.com/zed-industries/zed/archive/v1.28.1/zed-1.28.1.tar.gz
 	source = wayland-local-only.patch
-	sha256sums = 130215b2213bd839cfba673292be84ec4ad0ca0dcc19f44232b9a94c22cc8449
-	sha256sums = 97c92ea568994667aac9778bbeff55269e12318fc29100b476df40b6f6914f7f
+	sha256sums = 2baab0ae5fdbbdd64cf69afbc4fd3f4427dc86b9a8a4dfd2335a949097741226
+	sha256sums = 48a6a7b3a4b63fec350d4c0f0844f3e795b206789e8fbd4f20e852e072e5f8ed
 
 pkgname = zed-waypure
 	depends = alsa-lib
