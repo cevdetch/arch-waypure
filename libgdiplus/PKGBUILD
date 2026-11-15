@@ -43,7 +43,26 @@ build() {
 }
 
 check() {
-  make -C "${_pkgname}-${pkgver}" check
+  # The test suite substitutes Tahoma with the host's default sans font and
+  # only accepts Tahoma or DejaVu Sans (the ttf-dejavu checkdepends). Hosts
+  # with additional fonts (Adwaita, Noto) change the substitution, so pin a
+  # DejaVu-only fontconfig view with an explicit Tahoma rule.
+  local _fcdir="${srcdir}/fontconfig-check"
+  mkdir -p "${_fcdir}/fonts" "${_fcdir}/cache"
+  ln -sf /usr/share/fonts/TTF/DejaVu*.ttf "${_fcdir}/fonts/"
+  cat > "${_fcdir}/fonts.conf" <<EOF
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+<fontconfig>
+  <dir>${_fcdir}/fonts</dir>
+  <cachedir>${_fcdir}/cache</cachedir>
+  <match target="pattern">
+    <test qual="any" name="family"><string>Tahoma</string></test>
+    <edit name="family" mode="assign_replace" binding="strong"><string>DejaVu Sans</string></edit>
+  </match>
+</fontconfig>
+EOF
+  FONTCONFIG_FILE="${_fcdir}/fonts.conf" make -C "${_pkgname}-${pkgver}" check
 }
 
 package() {

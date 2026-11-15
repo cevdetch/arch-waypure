@@ -12,7 +12,7 @@ def _repo(tmp_path, spec):
         (d / 'PKGBUILD').write_text(text)
     return tmp_path
 
-def _patch_wb(monkeypatch, wb, versions):
+def _patch_wb(monkeypatch, wb, versions, makepkg_trace=None):
 
     which=shutil.which
     monkeypatch.setattr(shutil,'which',lambda command,*a,**kw:
@@ -44,6 +44,8 @@ def _patch_wb(monkeypatch, wb, versions):
             a, b = (cmd[1], cmd[2])
             return Proc(0, str((a > b) - (a < b)))
         if cmd[0] == 'makepkg':
+            if makepkg_trace is not None:
+                makepkg_trace.append(list(cmd))
             d = Path(str(kw.get('cwd')))
             (d / 'built.marker').write_text('built\n')
             return Proc(0, '')
@@ -100,6 +102,42 @@ class BuilderCliCase(BuilderCase):
         info = self.wb.PackageInfo(dir=package, pkgnames=['demo'], version='1.0-1')
         self.assertFalse(self.wb.build_dir(info, [], True))
         self.assertFalse((package/'built.marker').exists())
+
+    def test_stale_artifact_rebuild_is_forced(self):
+        package = self.root/'demo'
+        package.mkdir()
+        (package/'demo-1.0-1-x86_64.pkg.tar').write_text('stale')
+        (package/'PKGBUILD').write_text('pkgname=demo\npkgver=1.0\npkgrel=1\n')
+        trace = []
+        _patch_wb(self.monkeypatch, self.wb, {'demo': '1.0-1'}, makepkg_trace=trace)
+        self.assertEqual(self.wb.main(['--repo', str(self.root)]), 0)
+        self.assertIn('-f', trace[0])
+
+    def test_fresh_artifact_install_only_keeps_plain_makepkg(self):
+        package = self.root/'demo'
+        package.mkdir()
+        (package/'PKGBUILD').write_text('pkgname=demo\npkgver=1.0\npkgrel=1\n')
+        (package/'demo-1.0-1-x86_64.pkg.tar').write_text('fresh')
+        trace = []
+        _patch_wb(self.monkeypatch, self.wb, {}, makepkg_trace=trace)
+        self.assertEqual(self.wb.main(['--repo', str(self.root)]), 0)
+        self.assertNotIn('-f', trace[0])
+
+    def test_needs_force_decisions(self):
+        package = self.root/'demo'
+        package.mkdir()
+        stale = package/'demo-1.0-1-x86_64.pkg.tar'
+        stale.write_text('stale')
+        newer = package/'PKGBUILD'
+        newer.write_text('pkgname=demo\npkgver=1.0\npkgrel=1\n')
+        info = self.wb.PackageInfo(dir=package, pkgnames=['demo'], version='1.0-1')
+        for reason in ('forced', 'dependency rebuilt', 'sources newer than artifact'):
+            self.assertTrue(self.wb.needs_force(info, reason), reason)
+        self.assertTrue(self.wb.needs_force(info, 'demo not installed'))
+        split = self.wb.PackageInfo(dir=package, pkgnames=['demo', 'demo-subs'], version='1.0-1')
+        self.assertTrue(self.wb.needs_force(split, 'demo-subs not installed'))
+        stale.touch()
+        self.assertFalse(self.wb.needs_force(info, 'demo not installed'))
 
     def test_namcap_archive_error_is_reported_after_makepkg(self):
         import os

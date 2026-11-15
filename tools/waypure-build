@@ -280,6 +280,24 @@ def dirty_reason(info: PackageInfo) -> str | None:
     return None
 
 
+def needs_force(info: PackageInfo, reason: str) -> bool:
+    # makepkg refuses to rebuild when current-version artifacts exist, and a
+    # plain -si then silently reinstalls them. Force a real rebuild unless
+    # every output has an up-to-date artifact and only the install step is
+    # outstanding; the installed-version check can mask a stale artifact,
+    # and partial split outputs make plain -si refuse to install.
+    if reason in {"forced", "dependency rebuilt", "sources newer than artifact"}:
+        return True
+    for name in info.pkgnames:
+        artifacts = package_artifacts(info.dir, name, info.version)
+        if not artifacts:
+            return True
+        artifact = max(artifacts, key=lambda path: path.stat().st_mtime_ns)
+        if newer_inputs(info.dir, artifact):
+            return True
+    return False
+
+
 def propagate_dirty(tiers: list[list[PackageInfo]], dirty: set[Path], deps=None) -> set[Path]:
     infos = [i for tier in tiers for i in tier]
     if deps is None:
@@ -299,7 +317,8 @@ def propagate_dirty(tiers: list[list[PackageInfo]], dirty: set[Path], deps=None)
     return grown
 
 
-def build_dir(info: PackageInfo, makepkg_args: list[str], use_namcap: bool) -> bool:
+def build_dir(info: PackageInfo, makepkg_args: list[str], use_namcap: bool,
+              reason: str | None = None) -> bool:
     def lint(path):
         result = run_namcap(path)
         for finding in result['findings']:
@@ -309,6 +328,8 @@ def build_dir(info: PackageInfo, makepkg_args: list[str], use_namcap: bool) -> b
     if use_namcap and not lint(info.dir/'PKGBUILD'):
         return False
     cmd = ["makepkg", "-si", "--noconfirm", *makepkg_args]
+    if reason is not None and needs_force(info, reason):
+        cmd.append("-f")
     print(f"building {info.dir.name} ({info.version}): {' '.join(cmd)}")
     proc = subprocess.run(cmd, cwd=info.dir)
     reset_backend()
@@ -443,7 +464,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"SKIP {info.dir.name} (fresh)")
             continue
         extra = shlex.split(args.makepkg_args) if args.makepkg_args else []
-        if not build_dir(info, extra, args.namcap):
+        if not build_dir(info, extra, args.namcap, dirty[info.dir]):
             print(f"FAILED {info.dir.name}; resume with: "
                   f"waypure-build --repo {args.repo} --from {info.dir.name}",
                   file=sys.stderr)
