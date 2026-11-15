@@ -9,7 +9,7 @@ pkgdesc='GNU troff text-formatting system without X11 tools'
 arch=('x86_64')
 url='https://www.gnu.org/software/groff/'
 license=('GPL-3.0-or-later')
-depends=('glibc' 'libgcc' 'libstdc++' 'perl')
+depends=('glibc' 'libgcc' 'libstdc++' 'perl' 'uchardet')
 makedepends=('netpbm' 'psutils' 'perl-file-homedir')
 optdepends=(
   'netpbm: HTML output with embedded images'
@@ -33,6 +33,11 @@ build() {
   local _configure_options=(
     --prefix=/usr
     --without-x
+    # URW autodetection depends on host font packages; gsfonts ships PFBs
+    # without AFM metrics, so the U-* foundry generation silently produces
+    # nothing and check-urw-foundry.sh fails. The validated build (and the
+    # official Arch one) has no URW foundry; pin that decision here.
+    --without-urw-fonts
   )
 
   cd "${_pkgname}-${pkgver}"
