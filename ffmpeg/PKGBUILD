@@ -3,7 +3,7 @@
 
 _pkgname=ffmpeg
 pkgname=${_pkgname}-waypure
-pkgver=9.0.2
+pkgver=9.1
 pkgrel=1
 epoch=2
 pkgdesc="Complete solution to record, convert and stream audio and video"
@@ -120,7 +120,7 @@ source=(
   '0001-Add-av_stream_get_first_dts-for-Chromium.patch' # ARCH
   '0001-ffmpeg-6.1-opencl-parallel-gmake-fix.patch' # GENTOO
 )
-sha256sums=('6e374ed621e48faa40639307dff48ba6fe574a509977956d2cce9669b7cc27e9'
+sha256sums=('0ac7c9b9806b58eda00a528dcba316a2f33d291d949438900efa811d04b051bd'
             'f865d677f8ad39c79dde69186629cb6468c2b289c4156dbb8dec8e68b0131b40'
             'be5133af2c1afcb91751fab248110441ffe4987edd5dd346cb2c2c01e0c47e10')
 
@@ -191,9 +191,14 @@ build() {
     --disable-libaribb24
     --disable-libaribcaption
     --enable-libass
+    # ASTC texture coding is new in 9.1 and not needed here.
+    --disable-libastcenc # MINIMAL
     --enable-libbluray
     --enable-libbs2b
     --disable-libcdio
+    # 9.1 autodetects libcurl as a second HTTP(S) stack; keep the native
+    # GnuTLS protocols and avoid a host-dependent link.
+    --disable-libcurl # MINIMAL
     --enable-libdav1d
     --disable-libdavs2
     --enable-libdvdnav
@@ -270,7 +275,6 @@ build() {
     --disable-libmysofa
     --disable-ohcodec
     --enable-opencl
-    --disable-opengl # MINIMAL
     --disable-openssl
     --disable-pocketsphinx
     --disable-sndio # PIPEWIRE

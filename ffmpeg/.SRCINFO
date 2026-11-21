@@ -1,6 +1,6 @@
 pkgbase = ffmpeg-waypure
 	pkgdesc = Complete solution to record, convert and stream audio and video
-	pkgver = 9.0.2
+	pkgver = 9.1
 	pkgrel = 1
 	epoch = 2
 	url = https://github.com/FFmpeg/FFmpeg
@@ -92,7 +92,7 @@ pkgbase = ffmpeg-waypure
 	optdepends = vulkan-radeon: for AMD RADV Vulkan support
 	optdepends = vulkan-intel: for Intel ANV Vulkan support
 	optdepends = vapoursynth: VapourSynth script input
-	provides = ffmpeg=2:9.0.2
+	provides = ffmpeg=2:9.1
 	provides = libavcodec.so
 	provides = libavdevice.so
 	provides = libavfilter.so
@@ -102,10 +102,10 @@ pkgbase = ffmpeg-waypure
 	provides = libswscale.so
 	conflicts = ffmpeg
 	replaces = ffmpeg
-	source = https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n9.0.2.tar.gz
+	source = https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n9.1.tar.gz
 	source = 0001-Add-av_stream_get_first_dts-for-Chromium.patch
 	source = 0001-ffmpeg-6.1-opencl-parallel-gmake-fix.patch
-	sha256sums = 6e374ed621e48faa40639307dff48ba6fe574a509977956d2cce9669b7cc27e9
+	sha256sums = 0ac7c9b9806b58eda00a528dcba316a2f33d291d949438900efa811d04b051bd
 	sha256sums = f865d677f8ad39c79dde69186629cb6468c2b289c4156dbb8dec8e68b0131b40
 	sha256sums = be5133af2c1afcb91751fab248110441ffe4987edd5dd346cb2c2c01e0c47e10
 
