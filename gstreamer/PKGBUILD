@@ -153,16 +153,21 @@ checkdepends=('ttf-liberation' 'vulkan-swrast')
 source=(
   "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/archive/${pkgver}/${_pkgbase}-${pkgver}.tar.gz"
   '0001-HACK-meson-Disable-broken-tests.patch'
+  '0002-spandsp-Build-with-spandsp-3.patch'
   '0003-synaescope-handle-empty-bins.patch'
 )
 sha256sums=('0fdecabb02f170b78251f7b9f1b5092073f52e70ba06c92df53fe36745041db6'
             '81ce6dabcdcc84d8830d9740fd84da356e6a72fdab0a2db5ccf73a078dfc508d'
+            '03e0c90ec30da621709fd3a645c3de1cfe528780fb4773686e15dcd3067422ae'
             'a88228af586eba1f2cf2e427cfa24ee538bd5a45a5da7563f3a8116783cfebfc')
 
 prepare() {
   cd "${_pkgbase}-${pkgver}"
 
   patch -Np1 -i ../0001-HACK-meson-Disable-broken-tests.patch
+  # spandsp 3 makes plc_state_t opaque; patch from Arch's gstreamer package
+  # https://gitlab.archlinux.org/archlinux/packaging/packages/gstreamer/-/blob/main/0002-spandsp-Build-with-spandsp-3.patch
+  patch -Np1 -i ../0002-spandsp-Build-with-spandsp-3.patch
   patch -Np1 -i ../0003-synaescope-handle-empty-bins.patch
 }
 

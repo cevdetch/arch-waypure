@@ -135,9 +135,11 @@ pkgbase = gstreamer-waypure
 	makedepends = zxing-cpp
 	source = https://gitlab.freedesktop.org/gstreamer/gstreamer/-/archive/1.28.9/gstreamer-1.28.9.tar.gz
 	source = 0001-HACK-meson-Disable-broken-tests.patch
+	source = 0002-spandsp-Build-with-spandsp-3.patch
 	source = 0003-synaescope-handle-empty-bins.patch
 	sha256sums = 0fdecabb02f170b78251f7b9f1b5092073f52e70ba06c92df53fe36745041db6
 	sha256sums = 81ce6dabcdcc84d8830d9740fd84da356e6a72fdab0a2db5ccf73a078dfc508d
+	sha256sums = 03e0c90ec30da621709fd3a645c3de1cfe528780fb4773686e15dcd3067422ae
 	sha256sums = a88228af586eba1f2cf2e427cfa24ee538bd5a45a5da7563f3a8116783cfebfc
 
 pkgname = gstreamer-waypure
