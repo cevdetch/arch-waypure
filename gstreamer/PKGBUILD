@@ -301,11 +301,6 @@ _install() {
   done
 }
 
-_set_relations() {
-  provides=("${1}=${pkgver}")
-  conflicts=("$1")
-}
-
 package_gstreamer-waypure() {
   pkgdesc+=" - core"
   depends=(
@@ -320,7 +315,8 @@ package_gstreamer-waypure() {
     "python: gst-plugins-doc-cache-generator"
     "gst-plugin-pipewire: native PipeWire audio and video source/sink"
   )
-  _set_relations gstreamer
+  provides=("gstreamer=${pkgver}")
+  conflicts=(gstreamer)
   install=gstreamer.install
 
   meson install -C build --no-rebuild --destdir "$srcdir/root"
@@ -380,7 +376,8 @@ package_gst-plugins-bad-libs-waypure() {
     zlib
   )
 
-  _set_relations gst-plugins-bad-libs
+  provides=("gst-plugins-bad-libs=${pkgver}")
+  conflicts=(gst-plugins-bad-libs)
   cd root
   local files=(
     usr/include/gstreamer-1.0/gst/audio/{audio-bad-prelude,gstnonstreamaudiodecoder,gstplanaraudioadapter}.h
@@ -503,7 +500,8 @@ package_gst-plugins-base-libs-waypure() {
     zlib
   )
 
-  _set_relations gst-plugins-base-libs
+  provides=("gst-plugins-base-libs=${pkgver}")
+  conflicts=(gst-plugins-base-libs)
   cd root
   local files=(
     usr/include/gstreamer-1.0/gst/{allocators,app,audio,fft,gl,pbutils,riff,rtp,rtsp,sdp,tag,video}
@@ -566,7 +564,8 @@ package_gst-plugins-base-waypure() {
     pango
   )
 
-  _set_relations gst-plugins-base
+  provides=("gst-plugins-base=${pkgver}")
+  conflicts=(gst-plugins-base)
   cd root
   local files=(
     usr/lib/gstreamer-1.0/libgstalsa.so
@@ -617,7 +616,8 @@ package_gst-plugins-good-waypure() {
     zlib
   )
 
-  _set_relations gst-plugins-good
+  provides=("gst-plugins-good=${pkgver}")
+  conflicts=(gst-plugins-good)
   cd root
   local files=(
     usr/lib/gstreamer-1.0/libgst1394.so
@@ -770,9 +770,11 @@ package_gst-plugins-bad-waypure() {
   )
   optdepends=("gst-plugin-va: VA-API hardware decoding and encoding")
 
-  _set_relations gst-plugins-bad
-  provides+=("gst-plugin-svthevcenc=${pkgver}")
-  conflicts+=(gst-plugin-svthevcenc)
+  provides=(
+    "gst-plugins-bad=${pkgver}"
+    "gst-plugin-svthevcenc=${pkgver}"
+  )
+  conflicts=(gst-plugins-bad gst-plugin-svthevcenc)
   cd root
   local files=(
     usr/lib/gstreamer-1.0/libgstaes.so
@@ -855,7 +857,8 @@ package_gst-plugins-ugly-waypure() {
       x264
   )
 
-  _set_relations gst-plugins-ugly
+  provides=("gst-plugins-ugly=${pkgver}")
+  conflicts=(gst-plugins-ugly)
   cd root
   local files=(
     usr/lib/gstreamer-1.0/libgsta52dec.so
@@ -883,8 +886,11 @@ package_gst-libav-waypure() {
     glibc
   )
 
-  _set_relations gst-libav
-  provides+=("gst-ffmpeg=${pkgver}")
+  provides=(
+    "gst-libav=${pkgver}"
+    "gst-ffmpeg=${pkgver}"
+  )
+  conflicts=(gst-libav)
 
   cd root
   local files=(
@@ -903,7 +909,8 @@ package_gst-plugin-va-waypure() {
     libgudev
     libva
   )
-  _set_relations gst-plugin-va
+  provides=("gst-plugin-va=${pkgver}")
+  conflicts=(gst-plugin-va)
   replaces=('gstreamer-vaapi<=1.26.10-5')
 
   cd root

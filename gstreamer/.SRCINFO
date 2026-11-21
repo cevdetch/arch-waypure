@@ -151,6 +151,8 @@ pkgname = gstreamer-waypure
 	depends = libunwind
 	optdepends = python: gst-plugins-doc-cache-generator
 	optdepends = gst-plugin-pipewire: native PipeWire audio and video source/sink
+	provides = gstreamer=1.28.9
+	conflicts = gstreamer
 
 pkgname = gst-plugins-bad-libs-waypure
 	pkgdesc = Multimedia graph framework - bad
@@ -173,6 +175,8 @@ pkgname = gst-plugins-bad-libs-waypure
 	depends = wayland
 	depends = vmaf
 	depends = zlib
+	provides = gst-plugins-bad-libs=1.28.9
+	conflicts = gst-plugins-bad-libs
 
 pkgname = gst-plugins-base-libs-waypure
 	pkgdesc = Multimedia graph framework - base
@@ -190,6 +194,8 @@ pkgname = gst-plugins-base-libs-waypure
 	depends = orc
 	depends = wayland
 	depends = zlib
+	provides = gst-plugins-base-libs=1.28.9
+	conflicts = gst-plugins-base-libs
 
 pkgname = gst-plugins-base-waypure
 	pkgdesc = Multimedia graph framework - base plugins
@@ -206,6 +212,8 @@ pkgname = gst-plugins-base-waypure
 	depends = libvorbis
 	depends = opus
 	depends = pango
+	provides = gst-plugins-base=1.28.9
+	conflicts = gst-plugins-base
 
 pkgname = gst-plugins-good-waypure
 	pkgdesc = Multimedia graph framework - good plugins
@@ -242,6 +250,8 @@ pkgname = gst-plugins-good-waypure
 	depends = v4l-utils
 	depends = wavpack
 	depends = zlib
+	provides = gst-plugins-good=1.28.9
+	conflicts = gst-plugins-good
 
 pkgname = gst-plugins-bad-waypure
 	pkgdesc = Multimedia graph framework - bad plugins
@@ -313,7 +323,9 @@ pkgname = gst-plugins-bad-waypure
 	depends = zvbi
 	depends = zxing-cpp
 	optdepends = gst-plugin-va: VA-API hardware decoding and encoding
+	provides = gst-plugins-bad=1.28.9
 	provides = gst-plugin-svthevcenc=1.28.9
+	conflicts = gst-plugins-bad
 	conflicts = gst-plugin-svthevcenc
 
 pkgname = gst-plugins-ugly-waypure
@@ -326,6 +338,8 @@ pkgname = gst-plugins-ugly-waypure
 	depends = libcdio
 	depends = libdvdread
 	depends = x264
+	provides = gst-plugins-ugly=1.28.9
+	conflicts = gst-plugins-ugly
 
 pkgname = gst-libav-waypure
 	pkgdesc = Multimedia graph framework - libav plugin
@@ -334,7 +348,9 @@ pkgname = gst-libav-waypure
 	depends = ffmpeg
 	depends = glib2
 	depends = glibc
+	provides = gst-libav=1.28.9
 	provides = gst-ffmpeg=1.28.9
+	conflicts = gst-libav
 
 pkgname = gst-plugin-va-waypure
 	pkgdesc = Multimedia graph framework - va plugin
@@ -345,4 +361,6 @@ pkgname = gst-plugin-va-waypure
 	depends = glibc
 	depends = libgudev
 	depends = libva
+	provides = gst-plugin-va=1.28.9
+	conflicts = gst-plugin-va
 	replaces = gstreamer-vaapi<=1.26.10-5
