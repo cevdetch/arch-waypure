@@ -1,5 +1,7 @@
 # Packaging maintenance tools
 
+Developed locally in autumn 2026 and published on 14 November 2026.
+
 `waypure-options` compares upstream releases, checks packaging choices and writes
 copyable Bash option arrays. It supports Qt 6, FFmpeg, Meson, CMake and Autoconf,
 plus typed Cargo and Python dependency evidence.
@@ -1113,16 +1115,13 @@ labels/help. Generated M4/macros and implicit upstream transitions can need
 manual/native configure review. A feature for enabling deprecated APIs is not
 itself deprecated just because of its name. No background monitor is installed.
 
-Tool CI runs the tests on Python 3.11 and 3.13 with native Meson/CMake/ELF tools.
-It also defines a native release smoke job in a privileged Arch container for
-devtools mount namespaces. The checked-in synthetic fixture runs through
-`extra-x86_64-build` and `--auth doas` as an unprivileged user. CI then checks
-its PASS receipt, archive hashes and PKGBUILD provenance, retaining receipts,
-archives and logs for seven days. This tests the release-validation workflow;
-it does not build every collection package or establish their runtime coverage.
-It also audits metadata for changed recipes and patches. Source-option reviews
-use locally prepared sources and retained catalogues. CI does not compile the
-package collection or publish packages.
+Tool CI runs the tests on Python 3.11 and 3.13 with native Meson/CMake/ELF tools,
+and the ALPM tests with pyalpm in an Arch container. It also audits metadata for
+changed recipes and patches. GitHub container jobs lack the systemd-nspawn
+support that devtools needs, so clean-chroot release validation runs locally
+with `waypure-validate`; the unit tests cover its plans and receipts.
+Source-option reviews use locally prepared sources and retained catalogues.
+CI does not compile the package collection or publish packages.
 
 ## Tests
 
